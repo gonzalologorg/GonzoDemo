@@ -47,7 +47,7 @@ app.post("/login", (req, res) => {
 app.post("/disconnect", (req, res) => {
     const { token } = req.body;
     if (pool.getPlayerData(token)) {
-        delete pool.players[token];
+        pool.invalidatePlayer(token);
         res.status(200).send({
             status: "success"
         });

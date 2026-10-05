@@ -15,6 +15,17 @@ function getCharData(id){
     return cacheChars[id] || null;
 }
 
+function invalidatePlayer(token){
+    let playerData = players[token];
+    if (playerData) {
+        for (const char of playerData.characters) {
+            delete knownTokens[char.id];
+            delete cacheChars[char.id];
+        }
+        delete players[token];
+    }
+}
+
 function installPlayerLoaded(playerData){
     let token = crypto.randomBytes(32).toString("base64url");
     players[token] = playerData;
@@ -30,5 +41,7 @@ module.exports = {
     players,
     getPlayerData,
     installPlayerLoaded,
-    getTokenByCharId
+    getTokenByCharId,
+    invalidatePlayer,
+    getCharData
 };

@@ -26,6 +26,18 @@ function invalidatePlayer(token){
     }
 }
 
+// A player can only have one active cached session.  Removing the previous
+// session also clears its character-to-token mappings before a new token is
+// issued during login.
+function invalidatePlayerById(playerId){
+    for (const token of Object.keys(players)) {
+        const playerData = players[token];
+        if (playerData.player && playerData.player.id === playerId) {
+            invalidatePlayer(token);
+        }
+    }
+}
+
 function installPlayerLoaded(playerData){
     let token = crypto.randomBytes(32).toString("base64url");
     players[token] = playerData;
@@ -43,5 +55,6 @@ module.exports = {
     installPlayerLoaded,
     getTokenByCharId,
     invalidatePlayer,
+    invalidatePlayerById,
     getCharData
 };

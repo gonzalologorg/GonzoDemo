@@ -3,6 +3,7 @@ const argon2 = require("argon2");
 const driver = require("./driver.js");
 const pool = require("./pool.js");
 const app = express();
+app.use(express.json());
 require("dotenv").config();
 const connection = driver.connection;
 
@@ -13,7 +14,8 @@ app.post("/signup", (req, res) => {
             if (success) {
                 res.status(200).send({
                     status: "success",
-                    token: token
+                    token: token,
+                    playerData : pool.getPlayerData(token)
                 });
             } else {
                 res.status(400).send("Player already exists");
@@ -27,20 +29,19 @@ app.post("/signup", (req, res) => {
 
 app.post("/login", (req, res) => {
     const { username, password } = req.body;
-    argon2.hash(password).then(hash => {
-        driver.loginPlayer(username, hash, (success, token) => {
+    driver.loginPlayer(username, password, (success, token, playerData, character) => {
         if (success) {
             res.status(200).send({
                 status: "success",
-                token: token
+                token: token,
+                playerData : {
+                    player: playerData,
+                    characters: character
+                },
             });
         } else {
             res.status(400).send("Invalid username or password");
         }
-    });
-    }).catch(err => {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
     });
 });
 
@@ -57,15 +58,11 @@ app.post("/disconnect", (req, res) => {
 });
 
 app.post("/createcharacter", (req, res) => {
-    const { token, name, key } = req.body;
-    if (key !== process.env.API_SECRET) {
-        res.status(403).send("Invalid API key");
-        return;
-    }
+    const { token, name, portrait, side } = req.body;
 
     const playerData = pool.getPlayerData(token);
     if (playerData) {
-        driver.createCharacter(playerData.player.id, name, token, (success, newChar) => {
+        driver.createCharacter(playerData.player.id, name, side, portrait, token, (success, newChar) => {
             if (success) {
                 res.status(200).send({
                     status: "success",

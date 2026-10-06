@@ -66,7 +66,8 @@ app.post("/createcharacter", (req, res) => {
             if (success) {
                 res.status(200).send({
                     status: "success",
-                    character: newChar
+                    playerData: pool.getPlayerData(token),
+                    characterId: newChar.id
                 });
             } else {
                 res.status(400).send("Failed to create character");

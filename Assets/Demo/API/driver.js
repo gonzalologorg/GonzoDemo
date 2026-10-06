@@ -151,16 +151,17 @@ function createCharacter(player_id, name, side, portrait, token, result) {
             id: results.insertId,
             player_id: player_id,
             name: name,
-            inventory: '[]',
-            abilities: '[]',
-            equipment: '[]',
+            level: 1,
+            experience: 0,
+            money: 0,
+            inventory: [],
+            abilities: [],
+            equipment: [],
             side: side,
             portrait: portrait
-        }
+        };
         console.log("Character created successfully.");
-        playerData.characters.push(newChar);
-        pool.getTokenByCharId(newChar.id); // Ensure the knownTokens mapping is updated
-        result(true, newChar);
+        result(pool.addCharacter(token, newChar), newChar);
     });
 }
 

@@ -49,10 +49,23 @@ function installPlayerLoaded(playerData){
     return token;
 }
 
+function addCharacter(token, character) {
+    const playerData = getPlayerData(token);
+    if (!playerData) {
+        return false;
+    }
+
+    playerData.characters.push(character);
+    knownTokens[character.id] = token;
+    cacheChars[character.id] = character;
+    return true;
+}
+
 module.exports = {
     players,
     getPlayerData,
     installPlayerLoaded,
+    addCharacter,
     getTokenByCharId,
     invalidatePlayer,
     invalidatePlayerById,

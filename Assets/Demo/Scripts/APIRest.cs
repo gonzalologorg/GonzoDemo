@@ -32,6 +32,14 @@ public class APIRest : MonoBehaviour
 	}
 
 	[Serializable]
+	public class CharacterCreationResponse
+	{
+		public string status;
+		public PlayerData playerData;
+		public int characterId;
+	}
+
+	[Serializable]
 	public class CharacterCreationRequest
 	{
 		public string name;
@@ -73,6 +81,7 @@ public class APIRest : MonoBehaviour
 
 		CharacterResponse response = JsonUtility.FromJson<CharacterResponse>(request.downloadHandler.text);
 		GlobalManager.Instance.Token = response.token;
+		GlobalManager.Instance.PlayerData = response.playerData;
 		Destroy(modal);
 		action?.Invoke(response);
 	}
@@ -100,11 +109,12 @@ public class APIRest : MonoBehaviour
 
 		CharacterResponse response = JsonUtility.FromJson<CharacterResponse>(request.downloadHandler.text);
 		GlobalManager.Instance.Token = response.token;
+		GlobalManager.Instance.PlayerData = response.playerData;
 		Destroy(modal);
 		action?.Invoke();
 	}
 
-	public IEnumerator CreateCharacter(string name, int portraitIndex, int side, Action<CreatorBehaviour.CharacterCreationResponse> action)
+	public IEnumerator CreateCharacter(string name, int portraitIndex, int side, Action<CharacterCreationResponse> action)
 	{
 		GameObject modal = ModalController.singleton.Create(gameObject, "", "Creating character...").gameObject;
 		string json = JsonUtility.ToJson(new CharacterCreationRequest
@@ -125,13 +135,10 @@ public class APIRest : MonoBehaviour
 			});
 			yield break;
 		}
-		CreatorBehaviour.CharacterCreationResponse response = JsonUtility.FromJson<CreatorBehaviour.CharacterCreationResponse>(request.downloadHandler.text);
-		GlobalManager.Instance.CharacterId = response.character.id;
+		CharacterCreationResponse response = JsonUtility.FromJson<CharacterCreationResponse>(request.downloadHandler.text);
+		GlobalManager.Instance.PlayerData = response.playerData;
+		GlobalManager.Instance.CharacterId = response.characterId;
 		Destroy(modal);
-		action?.Invoke(new CreatorBehaviour.CharacterCreationResponse
-		{
-			status = response.status,
-			character = response.character
-		});
+		action?.Invoke(response);
 	}
 }

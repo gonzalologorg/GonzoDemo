@@ -10,21 +10,6 @@ public class CreatorBehaviour : MonoBehaviour
     public TMP_InputField characterInput;
 	public Toggle characterSide;
 
-	[System.Serializable]
-	public class CharacterCreationResponse
-	{
-		public string status;
-		// POST /createcharacter returns { status, character }.
-		public CreatedCharacter character;
-	}
-
-	[System.Serializable]
-	public class CreatedCharacter
-	{
-		public int id;
-	}
-
-
 	APIRest apiClient;
 
 	public void UpdatePortrait()
@@ -50,7 +35,6 @@ public class CreatorBehaviour : MonoBehaviour
 		{
 			if (response.status == "success")
 			{
-				GlobalManager.Instance.CharacterId = response.character.id;
 				ModalController.singleton.Create(this.gameObject, "Character Created", "Your character has been created successfully.", new ModalController.Option[]
 				{
 					new ModalController.Option("Ok", () => { UnityEngine.SceneManagement.SceneManager.LoadScene("MainScene"); })

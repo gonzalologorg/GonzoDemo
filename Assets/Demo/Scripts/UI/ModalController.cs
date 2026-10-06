@@ -51,7 +51,7 @@ public class ModalController : MonoBehaviour
 		modalPrefab = Resources.Load<ModalController>("UI/Modal");
 	}
 
-	public ModalController Create(GameObject parent, string Title, string Description, Option[] Options)
+	public ModalController Create(GameObject parent, string Title, string Description, Option[] Options = null)
 	{
 		if (CurrentModal != null)
 		{
@@ -60,6 +60,11 @@ public class ModalController : MonoBehaviour
 		ModalController modal = Instantiate(modalPrefab, parent.transform);
 		modal.SetupModal(Title, Description, Options);
 		CurrentModal = modal.gameObject;
+
+		if (Options == null || Options.Length == 0)
+		{
+			modal.Footer.SetActive(false);
+		}
 		return modal;
 	}
 
@@ -74,17 +79,22 @@ public class ModalController : MonoBehaviour
 			button.SetActive(true);
 			button.transform.SetParent(Footer.transform, false);
 			Button uiButton = button.GetComponent<Button>();
-			uiButton.onClick.AddListener(() => option.onClick.Invoke());
+			uiButton.onClick.AddListener(() =>
+			{
+				option.onClick.Invoke();
+				Destroy(gameObject);
+			});
 			TMP_Text buttonText = button.GetComponentInChildren<TMP_Text>();
 			buttonText.text = option.Text;
 		}
 	}
 
-	public void SetupModal(string title, string description, Option[] options)
+	public void SetupModal(string title, string description, Option[] options = null)
 	{
 		Title.GetComponent<TMP_Text>().text = title;
 		Description.GetComponent<TMP_Text>().text = description;
-		Options = options;
+		if (options != null && options.Length > 0)
+			Options = options;
 	}
 
     // Update is called once per frame

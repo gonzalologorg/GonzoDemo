@@ -18,7 +18,6 @@ public class CharSelector : MonoBehaviour
     };
 
 	CanvasGroup frameObject;
-    float alphaValue = 0.0f;
     void Awake()
     {
 		frameObject = GetComponentInChildren<CanvasGroup>();

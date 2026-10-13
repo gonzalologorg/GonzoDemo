@@ -120,19 +120,19 @@ public class LoginBehaviour : MonoBehaviour
 	{
 		float startAlpha = registerCanvasGroup.alpha;
 		float elapsedTime = 0f;
-		float targetX = isRegisterFormActive ? 367f : 250f;
+		float targetX = isRegisterFormActive ? 400f : 382f;
 		while (elapsedTime < duration)
 		{
 			elapsedTime += Time.deltaTime;
-			targetX = Mathf.Lerp(targetX, isRegisterFormActive ? 367f : 250f, elapsedTime / duration);
-			Vector2 targetPos = new Vector2(targetX, -32);
+			targetX = Mathf.Lerp(targetX, isRegisterFormActive ? 400f : 382f, elapsedTime / duration);
+			Vector2 targetPos = new Vector2(targetX, -42);
 
 			registerCanvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, elapsedTime / duration);
 			registerFormRectTransform.anchoredPosition = Vector2.Lerp(registerFormRectTransform.anchoredPosition, targetPos, elapsedTime / duration);
 			yield return null;
 		}
 		registerCanvasGroup.alpha = targetAlpha;
-		registerFormRectTransform.anchoredPosition = new Vector2(targetX, -32);
+		registerFormRectTransform.anchoredPosition = new Vector2(targetX, -42);
 
 		if (!isRegisterFormActive)
 			registerForm.SetActive(false);

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dc5bbd0c62216749a3f3ead8ed7d71b, type: 3}
+  m_Name: sword1
+  m_EditorClassIdentifier: Assembly-CSharp::Weapon
+  id: 0
+  itemName: Main Sword
+  description: This is a sword alright?
+  icon: {fileID: 21300000, guid: b9f1baa1b9b01fa42974d3be35064606, type: 3}
+  type: 2
+  stats: []
+  model: {fileID: 8973469795265996349, guid: 0af6abb48db2e3e4b80d551f5973e7a3, type: 3}
+  animGroup: {fileID: 0}
+  damage: 30
+  attackSpeed: 1.5

@@ -7,7 +7,9 @@ public class CharSelector : MonoBehaviour
 {
     public GameObject characterCardPrefab;
     public GameObject creatorFrame;
-	public Transform characterPanelTransform;
+    public GameObject selectorFrame;
+    public GameObject selectorFooterFrame;
+    public Transform characterPanelTransform;
     public GameObject characterNewOption;
 	public Sprite[] Portraits;
 

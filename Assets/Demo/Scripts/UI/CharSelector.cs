@@ -44,7 +44,7 @@ public class CharSelector : MonoBehaviour
         {
 			GameObject characterCard = Instantiate(characterCardPrefab, characterPanelTransform);
 			characterCard.transform.Find("charname").GetComponent<TMP_Text>().text = characters[i].name;
-			characterCard.transform.Find("chargraph").GetComponent<Image>().sprite = Portraits[characters[i].portrait];
+			characterCard.transform.Find("base").Find("chargraph").GetComponent<Image>().sprite = Portraits[characters[i].portrait];
             characterCard.GetComponent<Image>().color = sideColors[characters[i].side];
 		}
     }

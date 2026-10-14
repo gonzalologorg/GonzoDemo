@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1473675b57b92d14c91b82b2bb69217a, type: 3}
   m_Name: body2
   m_EditorClassIdentifier: Assembly-CSharp::Body
-  id: 4
+  id: shirt_2
+  rarity: 1
   itemName: Shirt #2
   description: 
   icon: {fileID: 21300000, guid: 35f5d97f3adfbdd47bb5792ad5696a33, type: 3}

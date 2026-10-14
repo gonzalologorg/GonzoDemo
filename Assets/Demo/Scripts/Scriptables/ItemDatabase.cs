@@ -6,11 +6,11 @@ public class ItemDatabase : ScriptableObject
 {
     [SerializeField]
     private ItemDefinition[] items;
-    private Dictionary<int, ItemDefinition> lookup;
+    private Dictionary<string, ItemDefinition> lookup;
 
     public void Initialize()
     {
-        lookup = new Dictionary<int, ItemDefinition>();
+        lookup = new Dictionary<string, ItemDefinition>();
 		foreach (ItemDefinition newItem in items)
 		{
             if (!lookup.TryAdd(newItem.Id, newItem))
@@ -20,7 +20,7 @@ public class ItemDatabase : ScriptableObject
 		}
 	}
 
-    public ItemDefinition Get(int id)
+    public ItemDefinition Get(string id)
     {
         if (lookup == null)
             Initialize();

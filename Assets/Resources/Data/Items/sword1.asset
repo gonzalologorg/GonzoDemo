@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4dc5bbd0c62216749a3f3ead8ed7d71b, type: 3}
   m_Name: sword1
   m_EditorClassIdentifier: Assembly-CSharp::Weapon
-  id: 0
+  id: wep_sword1
+  rarity: 0
   itemName: Main Sword
   description: This is a sword alright?
   icon: {fileID: 21300000, guid: b9f1baa1b9b01fa42974d3be35064606, type: 3}

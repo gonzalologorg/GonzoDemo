@@ -19,14 +19,25 @@ public abstract class ItemDefinition : ScriptableObject
 		Misc,
 	}
 
-	[SerializeField] private int id;
+	public enum ItemRarity
+	{
+		Common,
+		Uncommon,
+		Rare,
+		Epic,
+		Legendary,
+	}
+
+	[SerializeField] private string id;
+	[SerializeField] private ItemRarity rarity;
 	[SerializeField] private string itemName;
 	[SerializeField] private string description;
 	[SerializeField] private Sprite icon;
 	[SerializeField] private ItemType type;
 	[SerializeField] private Dictionary<string, float> stats;
 
-	public int Id => id;
+	public string Id => id;
+	public ItemRarity Rarity => rarity;
 	public string Name => itemName;
 	public string Description => description;
 	public Sprite Icon => icon;

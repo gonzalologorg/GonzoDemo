@@ -5,8 +5,9 @@ public class ItemInstance
 	public int amount;
 	public int slot;
 
-	public ItemInstance(string itemId, int amount)
+	public ItemInstance(int slot, string itemId, int amount)
 	{
+		this.slot = slot;
 		this.itemId = itemId;
 		this.amount = amount;
 	}

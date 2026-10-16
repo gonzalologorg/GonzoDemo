@@ -72,6 +72,9 @@ public class ItemControl : MonoBehaviour,
 
     public void OnBeginDrag(PointerEventData eventData)
 	{
+        if (Item == null)
+            return;
+
         dragObject = new GameObject(
             "DraggedItem",
             typeof(RectTransform),

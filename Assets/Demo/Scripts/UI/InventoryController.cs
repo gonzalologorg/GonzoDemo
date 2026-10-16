@@ -11,6 +11,7 @@ public class InventoryController : MonoBehaviour
     public GameObject InventorySlotPrefab;
 	public ItemDatabase ItemDatabase;
 	public PlayerInventory playerInventory;
+    public GameObject EquipmentPanel;
 
 	bool inventoryOpen = false;
     CanvasGroup canvasGroup;
@@ -46,6 +47,7 @@ public class InventoryController : MonoBehaviour
 		}
 
 		playerInventory.OnInventoryUpdated += OnInventoryUpdated;
+        playerInventory.OnEquipmentUpdated += OnEquipmentUpdated;
     }
 
     private void OnInventoryUpdated()
@@ -76,6 +78,20 @@ public class InventoryController : MonoBehaviour
             }
 
             ItemSlot.SetupControl();
+        }
+    }
+
+    public void OnEquipmentUpdated()
+    {
+        Debug.Log("Equipment updated!");
+        for (int i = 21; i <= 25; i++)
+        {
+            ItemControl itemSlot = EquipmentPanel.transform.Find("Equipment_" + i)?.GetComponent<ItemControl>();
+            ItemInstance ourItem = playerInventory.equipment.ContainsKey(i) ? playerInventory.equipment[i] : null;
+
+            itemSlot.Item = ourItem != null ? playerInventory.itemDatabase.Get(ourItem.itemId) : null;
+            itemSlot.Amount = ourItem != null ? ourItem.amount : 0;
+            itemSlot.SetupControl();
         }
     }
 

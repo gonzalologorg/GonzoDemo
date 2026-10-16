@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4dc5bbd0c62216749a3f3ead8ed7d71b, type: 3}
   m_Name: sword3
   m_EditorClassIdentifier: Assembly-CSharp::Weapon
-  id: wep_mace
+  id: acc_mask1
   rarity: 4
-  itemName: Big Ass Mace
-  description: Not a sword anymore
-  icon: {fileID: 21300000, guid: 88ef853d60e65c742bc4e7e4ca055130, type: 3}
-  type: 2
+  itemName: Mask Item
+  description: It's a mask
+  icon: {fileID: 21300000, guid: f69f25de328274e4abbf1d961563e0ef, type: 3}
+  type: 0
   stats: []
   model: {fileID: 6318934689556549692, guid: b255002f235182b4f8226ac63b7234a6, type: 3}
   animGroup: {fileID: 0}

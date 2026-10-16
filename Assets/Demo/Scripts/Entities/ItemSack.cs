@@ -13,7 +13,9 @@ public class ItemSack : NetworkBehaviour
     {
         SpriteRenderer spriteRenderer = transform.Find("Square").GetComponent<SpriteRenderer>();
         icon = transform.Find("Square").gameObject;
-        ItemDefinition itemDefinition = GlobalManager.Instance.itemDatabase.Get(ItemId.ToString());
+        GlobalManager gmInstance = GlobalManager.Instance;
+        ItemDefinition itemDefinition = gmInstance.itemDatabase.Get(ItemId.ToString());
+        if (itemDefinition == null) return;
         spriteRenderer.sprite = itemDefinition.Icon;
     }
 
@@ -31,7 +33,7 @@ public class ItemSack : NetworkBehaviour
             return;
 
         playerInventory.AddItem(ItemId, Amount);
-        Destroy(this.gameObject);
+        NetworkObject.Despawn();
     }
 
     // Update is called once per frame

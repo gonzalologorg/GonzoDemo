@@ -21,11 +21,6 @@ public class ItemSack : NetworkBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log(
-            $"Trigger: {other.name} | " +
-            $"IsServer: {IsServer} | " +
-            $"IsSpawned: {IsSpawned}"
-        );
         if (!IsServer) return;
 
         if (!other.TryGetComponent<PlayerInventory>(
@@ -33,7 +28,8 @@ public class ItemSack : NetworkBehaviour
             return;
 
         playerInventory.AddItem(ItemId, Amount);
-        NetworkObject.Despawn();
+        NetworkObject.Despawn(false);
+        Destroy(this.gameObject);
     }
 
     // Update is called once per frame

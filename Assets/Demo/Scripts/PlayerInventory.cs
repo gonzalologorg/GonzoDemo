@@ -14,6 +14,10 @@ public class PlayerInventory : NetworkBehaviour
     [SerializeField]
     public Dictionary<int, ItemInstance> equipment = new();
 
+    public event Action OnInventoryUpdated;
+    public event Action OnEquipmentUpdated;
+    public ItemDatabase itemDatabase;
+
 
     private bool inventoryDirty;
 
@@ -34,8 +38,17 @@ public class PlayerInventory : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        networkInventory.OnListChanged += OnInventoryChanged;
-        networkEquipment.OnListChanged += OnEquipmentChanged;
+        if (IsServer || IsOwner)
+        {
+            networkInventory.OnListChanged += OnInventoryChanged;
+            networkEquipment.OnListChanged += OnEquipmentChanged;
+            Debug.Log(
+                $"PlayerInventory Spawn | " +
+                $"Server={IsServer} | " +
+                $"Owner={IsOwner} | " +
+                $"Client={IsClient}"
+            );
+        }
 
         RebuildDictionary(networkInventory, inventory);
         RebuildDictionary(networkEquipment, equipment);
@@ -50,11 +63,25 @@ public class PlayerInventory : NetworkBehaviour
     private void OnInventoryChanged(NetworkListEvent<NetworkItem> change)
     {
         RebuildDictionary(networkInventory, inventory);
+
+        if (IsClient && IsOwner)
+            OnInventoryUpdated?.Invoke();
     }
 
     private void OnEquipmentChanged(NetworkListEvent<NetworkItem> change)
     {
         RebuildDictionary(networkEquipment, equipment);
+    }
+
+    void Start()
+    {
+        itemDatabase = GlobalManager.Instance.itemDatabase;
+        if (IsClient && IsOwner)
+        {
+            GameObject InventoryPanel = (GameObject)Instantiate(Resources.Load("UI/Panels/Inventory"), GameObject.Find("WorldCanvas").transform);
+            InventoryPanel.GetComponent<InventoryController>().playerInventory = this;
+            InventoryPanel.GetComponent<InventoryController>().StartPanel();
+        }
     }
 
     private void SetNetworkItem(NetworkList<NetworkItem> list, int slot, ItemInstance item)
@@ -167,7 +194,6 @@ public class PlayerInventory : NetworkBehaviour
             return false;
 
         ItemInstance fromItem = inventory[from];
-        var clientRPC = GetOwnerRPC();
 
         // If we have a target item, then we copy from target into our principal slot (Switch
         if (inventory.ContainsKey(to))
@@ -189,10 +215,43 @@ public class PlayerInventory : NetworkBehaviour
         return true;
     }
 
-    ClientRpcParams GetOwnerRPC()
+
+    private Dictionary<ItemDefinition.ItemType, int> itemPairs = new(){
+        { ItemDefinition.ItemType.Head, 21 },
+        { ItemDefinition.ItemType.Body, 22 },
+        { ItemDefinition.ItemType.Weapon, 23 },
+        { ItemDefinition.ItemType.Misc, 24 },
+        { ItemDefinition.ItemType.Consumable, 25 },
+    };
+
+    [Rpc(SendTo.Server)]
+    public void RequestMoveItemRpc(int from, int to, bool IsEquipment, bool IsTargetEquipment)
     {
-        // Base owner ClientRPC params for the owner
-        return new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } } };
+        if (!IsOwner)
+            return;
+
+        if (!IsEquipment && !IsTargetEquipment)
+        {
+            MoveItem(from, to);
+            return;
+        }
+
+        if (!IsTargetEquipment)
+        {
+            ItemInstance targetItemSlot = inventory[to];
+            if (targetItemSlot != null) return;
+
+            EquipItem(from, to, false);
+        } else
+        {
+            ItemInstance targetItemSlot = equipment.ContainsKey(to) ? equipment[to] : null;
+            if (targetItemSlot != null) return;
+            ItemDefinition itemDefinition = itemDatabase.Get(inventory[from].itemId);
+            if (itemDefinition == null) return;
+            if (itemPairs.ContainsKey(itemDefinition.Type) && itemPairs[itemDefinition.Type] != to) return;
+
+            EquipItem(from, to, true);
+        }
     }
 
     public bool RemoveItem(int slot, bool isEquipment)

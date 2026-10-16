@@ -622,7 +622,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &7095720474669383541
 RectTransform:
   m_ObjectHideFlags: 0
@@ -851,6 +851,7 @@ MonoBehaviour:
   InventorySlotPrefab: {fileID: 2410853830382611408, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
   ItemDatabase: {fileID: 0}
   playerInventory: {fileID: 0}
+  EquipmentPanel: {fileID: 2006835455539745013}
 --- !u!225 &5846914415904583503
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -1097,7 +1098,7 @@ RectTransform:
   m_Father: {fileID: 6130251069085091013}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -1157,7 +1158,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &8846114403197741851
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1298,7 +1299,7 @@ RectTransform:
   m_Father: {fileID: 2582102093383851875}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: -10, y: 0}
   m_SizeDelta: {x: -10, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -1350,7 +1351,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2410853830382611408, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: m_Name
-      value: Item (3)
+      value: Equipment_24
       objectReference: {fileID: 0}
     - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: Item
@@ -1360,6 +1361,10 @@ PrefabInstance:
       propertyPath: Slot
       value: 24
       objectReference: {fileID: 0}
+    - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
+      propertyPath: rootCanvas
+      value: 
+      objectReference: {fileID: 2834627627500294008}
     - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: inventoryController
       value: 
@@ -1468,7 +1473,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2410853830382611408, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: m_Name
-      value: Item (1)
+      value: Equipment_22
       objectReference: {fileID: 0}
     - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: Item
@@ -1478,6 +1483,10 @@ PrefabInstance:
       propertyPath: Slot
       value: 22
       objectReference: {fileID: 0}
+    - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
+      propertyPath: rootCanvas
+      value: 
+      objectReference: {fileID: 2834627627500294008}
     - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: inventoryController
       value: 
@@ -1586,7 +1595,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2410853830382611408, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: m_Name
-      value: Item (2)
+      value: Equipment_23
       objectReference: {fileID: 0}
     - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: Item
@@ -1596,6 +1605,10 @@ PrefabInstance:
       propertyPath: Slot
       value: 23
       objectReference: {fileID: 0}
+    - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
+      propertyPath: rootCanvas
+      value: 
+      objectReference: {fileID: 2834627627500294008}
     - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: inventoryController
       value: 
@@ -2262,7 +2275,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2410853830382611408, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: m_Name
-      value: Item (4)
+      value: Equipment_25
       objectReference: {fileID: 0}
     - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: Item
@@ -2272,6 +2285,10 @@ PrefabInstance:
       propertyPath: Slot
       value: 25
       objectReference: {fileID: 0}
+    - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
+      propertyPath: rootCanvas
+      value: 
+      objectReference: {fileID: 2834627627500294008}
     - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: inventoryController
       value: 
@@ -2380,7 +2397,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2410853830382611408, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: m_Name
-      value: Item
+      value: Equipment_21
       objectReference: {fileID: 0}
     - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: Item
@@ -2390,6 +2407,10 @@ PrefabInstance:
       propertyPath: Slot
       value: 21
       objectReference: {fileID: 0}
+    - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
+      propertyPath: rootCanvas
+      value: 
+      objectReference: {fileID: 2834627627500294008}
     - target: {fileID: 6908777367749852931, guid: 86d910f50fc01ae459f554632db397a4, type: 3}
       propertyPath: inventoryController
       value: 

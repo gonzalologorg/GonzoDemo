@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 119e17e164209f6439e209a673ce001c, type: 3}
+  m_Name: Mask
+  m_EditorClassIdentifier: Assembly-CSharp::Head
+  id: mask_1
+  rarity: 3
+  itemName: Player Mask
+  description: 
+  icon: {fileID: 21300000, guid: f69f25de328274e4abbf1d961563e0ef, type: 3}
+  type: 0
+  stats: []

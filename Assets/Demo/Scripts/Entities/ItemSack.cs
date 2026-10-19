@@ -7,6 +7,7 @@ public class ItemSack : NetworkBehaviour
 {
     public int Amount;
     public string ItemId;
+    public bool consumed = false;
     GameObject icon;
 
     void Start()
@@ -19,17 +20,24 @@ public class ItemSack : NetworkBehaviour
         spriteRenderer.sprite = itemDefinition.Icon;
     }
 
+    public override void OnNetworkDespawn()
+    {
+        gameObject.SetActive(false);
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        if (!IsServer) return;
+        if (!IsServer || consumed) return;
 
         if (!other.TryGetComponent<PlayerInventory>(
                 out var playerInventory))
             return;
 
-        playerInventory.AddItem(ItemId, Amount);
+        consumed = true;
         NetworkObject.Despawn(false);
-        Destroy(this.gameObject);
+        gameObject.SetActive(false);
+
+        playerInventory.AddItem(ItemId, Amount);
     }
 
     // Update is called once per frame

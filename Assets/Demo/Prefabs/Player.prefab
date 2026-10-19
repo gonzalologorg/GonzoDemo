@@ -90,7 +90,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 229119272
+  GlobalObjectIdHash: 1632367415
   InScenePlacedSourceGlobalObjectIdHash: 0
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -772,7 +772,7 @@ MonoBehaviour:
     - name: Jump
       NameHash: 125937960
       Synchronize: 1
-      ParameterType: 9
+      ParameterType: 4
     - name: FreeFall
       NameHash: -2098586373
       Synchronize: 1

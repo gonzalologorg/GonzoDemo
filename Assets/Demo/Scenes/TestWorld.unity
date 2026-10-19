@@ -359,6 +359,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   Amount: 2
   ItemId: mask_1
+  consumed: 0
 --- !u!114 &297511521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -876,6 +877,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   Amount: 2
   ItemId: mask_1
+  consumed: 0
 --- !u!114 &891817175
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1957,6 +1959,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   Amount: 1
   ItemId: shirt_3
+  consumed: 0
 --- !u!114 &1594149342
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3043,7 +3046,7 @@ MonoBehaviour:
     LoadSceneTimeOut: 120
     SpawnTimeout: 10
     EnableNetworkLogs: 1
-    NetworkTopology: 1
+    NetworkTopology: 0
     UseCMBService: 0
     AutoSpawnPlayerPrefabClientSide: 1
     NetworkMessageMetrics: 1

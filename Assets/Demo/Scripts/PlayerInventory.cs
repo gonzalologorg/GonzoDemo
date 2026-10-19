@@ -64,11 +64,10 @@ public class PlayerInventory : NetworkBehaviour
 
     private void OnEquipmentChanged(NetworkListEvent<NetworkItem> change)
     {
+        RebuildDictionary(networkEquipment, equipment);
+
         if (IsClient && IsOwner)
             OnEquipmentUpdated?.Invoke();
-
-        RebuildDictionary(networkEquipment, equipment);
-        Debug.Log("Equipment changed, rebuilding dictionary");
     }
 
     void Start()
@@ -303,9 +302,14 @@ public class PlayerInventory : NetworkBehaviour
     };
 
     [Rpc(SendTo.Server)]
-    public void RequestMoveItemRpc(int from, int to, bool IsEquipment, bool IsTargetEquipment)
+    public void RequestMoveItemRpc(int from, int to, bool IsEquipment, bool IsTargetEquipment, RpcParams rpcParams = default)
     {
-        if (!IsOwner)
+        Debug.Log($"RequestMoveItemRpc called with from: {from}, to: {to}, IsEquipment: {IsEquipment}, IsTargetEquipment: {IsTargetEquipment}" +
+            $"IsOwner: {IsOwner}, IsServer: {IsServer}, OwnerClientId: {OwnerClientId}, IsClient: {IsClient}");
+
+        ulong senderClientId = rpcParams.Receive.SenderClientId;
+
+        if (senderClientId != OwnerClientId)
             return;
 
         if (!IsEquipment && !IsTargetEquipment)

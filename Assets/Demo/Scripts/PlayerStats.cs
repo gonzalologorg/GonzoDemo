@@ -18,7 +18,7 @@ public class PlayerStats : NetworkBehaviour
     }
 
     public DefaultStats defaultStats;
-    private readonly NetworkList<StatKind> networkStats =
+    private NetworkList<StatKind> networkStats =
         new NetworkList<StatKind>(
             null,
             NetworkVariableReadPermission.Everyone,
@@ -30,6 +30,7 @@ public class PlayerStats : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+
         if (IsServer && defaultStats != null)
         {
             SetStat(StatType.Health, defaultStats.health);

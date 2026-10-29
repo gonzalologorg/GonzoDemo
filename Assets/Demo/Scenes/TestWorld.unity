@@ -2704,32 +2704,6 @@ Transform:
   - {fileID: 3484677824217711074}
   m_Father: {fileID: 8056790468497844709}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2545285552327444788
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5121032317849240985}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7468e56717972404d9fe716754e6d5fa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Blocks.Gameplay.Core::Blocks.Gameplay.Core.GameManager
-  isUsingMultiplayerServices: 0
-  sessionSettings: {fileID: 11400000, guid: 0bf4e1684added44da254017c7fc41b2, type: 2}
-  sessionUI: {fileID: 2693613673069503044}
-  fadeDuration: 0.5
-  respawnDelay: 5
-  autoRespawn: 1
-  spawnPoints:
-  - {fileID: 8292279089585006937}
-  - {fileID: 3219773841267833847}
-  - {fileID: 7621394973156385943}
-  - {fileID: 2522844330269624791}
-  onStatDepleted: {fileID: 11400000, guid: aced99a6f7f354e5c87c8fab171c4c31, type: 2}
-  onRespawnStatus: {fileID: 11400000, guid: 71f658fc8f4634328824b9ea768b8d21, type: 2}
-  respawnTimerSFX: {fileID: 11400000, guid: 25d69b7fea0f98c44afdee0c63faa39a, type: 2}
 --- !u!114 &2647351641587429957
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3163,9 +3137,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7609345494469966678}
-  - component: {fileID: 2545285552327444788}
   - component: {fileID: 7107654216208635168}
   - component: {fileID: 1926012073855090687}
+  - component: {fileID: 7609345494469966679}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -3355,6 +3329,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7609345494469966679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5121032317849240985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c85dceea8a75ff049a39eac64a4687d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.GameManager
+  isUsingMultiplayerServices: 0
+  sessionSettings: {fileID: 11400000, guid: 0bf4e1684added44da254017c7fc41b2, type: 2}
+  sessionUI: {fileID: 2693613673069503044}
+  fadeDuration: 0.5
+  respawnDelay: 5
+  autoRespawn: 1
+  spawnPoints:
+  - {fileID: 8292279089585006937}
+  - {fileID: 3219773841267833847}
+  - {fileID: 7621394973156385943}
+  - {fileID: 2522844330269624791}
 --- !u!4 &7621394973156385943
 Transform:
   m_ObjectHideFlags: 0

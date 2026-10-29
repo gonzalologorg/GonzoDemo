@@ -1,6 +1,7 @@
 using Blocks.Gameplay.Core;
 using System.Collections;
 using System.Linq;
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -8,8 +9,6 @@ using UnityEngine.UIElements;
 [RequireComponent(typeof(UIDocument))]
 public class HUDController : NetworkBehaviour
 {
-	[Header("Component Dependencies")]
-	[SerializeField] private CoreStatsHandler coreStats;
 	[Header("Listening to Events")]
 	[SerializeField] private StatChangeEvent onStatChanged;
 	[SerializeField] private RespawnStatusEvent onRespawnStatusChanged;
@@ -23,6 +22,9 @@ public class HUDController : NetworkBehaviour
 	private Image uiHealthBar;
 	private Image uiChakraBar;
 	public VisualElement[] uiJutsuControls = new VisualElement[5];
+	public Canvas hudHead;
+	Camera mainCamera;
+
 	#endregion
 
 	public override void OnNetworkSpawn()
@@ -34,13 +36,11 @@ public class HUDController : NetworkBehaviour
 		}
 
 		RegisterEventListeners();
-		StartCoroutine(InitialHUDUpdate());
 	}
 
 	void Awake()
 	{
-		if (!ValidateComponents()) return;
-
+		mainCamera = Camera.main;
 		CreateHUD();
 	}
 
@@ -54,18 +54,7 @@ public class HUDController : NetworkBehaviour
 		{
 			uiDoc.enabled = false;
 		}
-		enabled = false;
-	}
-
-	private bool ValidateComponents()
-	{
-		if (coreStats == null)
-		{
-			Debug.LogError("CoreHUD could not find CoreStatsHandler! The HUD will not function.", this);
-			enabled = false;
-			return false;
-		}
-		return true;
+		//enabled = false;
 	}
 
 	private void CreateHUD()
@@ -87,27 +76,6 @@ public class HUDController : NetworkBehaviour
 		if (onStatChanged != null) onStatChanged.RegisterListener(HandleStatChanged);
 	}
 
-	/// <summary>
-	/// Coroutine that performs initial HUD updates after spawn.
-	/// </summary>
-	/// <returns>IEnumerator for coroutine execution.</returns>
-	private IEnumerator InitialHUDUpdate()
-	{
-		yield return null;
-
-		if (coreStats != null)
-		{
-			foreach (var stat in coreStats.GetAllStats())
-			{
-				HandleStatChanged(new StatChangePayload
-				{
-					statName = stat.name,
-					currentValue = stat.current,
-					maxValue = stat.max
-				});
-			}
-		}
-	}
 
 	/// <summary>
 	/// Handles stat change events, updating progress bars and handling elimination notifications.
@@ -181,6 +149,56 @@ public class HUDController : NetworkBehaviour
 		{
 			iconImage.style.backgroundImage = new StyleBackground(instance.Definition.JutsuIcon.texture);
 			iconImage.style.unityBackgroundImageTintColor = new StyleColor(Color.white);
+		}
+	}
+
+	public void UpdateName(string newName)
+	{
+		if (uiNickLabel != null)
+		{
+			uiNickLabel.text = newName;
+		}
+
+		GameObject nickLabel = hudHead.transform.Find("Name").gameObject;
+		if (nickLabel.GetComponent<TextMeshProUGUI>() != null)
+		{
+			nickLabel.GetComponent<TextMeshProUGUI>().text = newName;
+		}
+	}
+
+	private void FixedUpdate()
+	{
+		UpdateNameDisplayRotation();
+	}
+
+	/// <summary>
+	/// Rotates the nameplate canvas to always face the camera (billboard effect).
+	/// The 180-degree rotation corrects the canvas facing direction.
+	/// </summary>
+	private void UpdateNameDisplayRotation()
+	{
+		if (hudHead == null || !hudHead.gameObject.activeSelf)
+		{
+			return;
+		}
+
+		if (mainCamera == null)
+		{
+			mainCamera = Camera.main;
+		}
+
+		if (mainCamera == null)
+		{
+			return;
+		}
+
+		Transform nameplate = hudHead.transform;
+		Vector3 directionToCamera = mainCamera.transform.position - nameplate.position;
+
+		if (directionToCamera.sqrMagnitude > 0.0001f)
+		{
+			nameplate.rotation = Quaternion.LookRotation(directionToCamera, mainCamera.transform.up)
+				* Quaternion.Euler(0f, 180f, 0f);
 		}
 	}
 }

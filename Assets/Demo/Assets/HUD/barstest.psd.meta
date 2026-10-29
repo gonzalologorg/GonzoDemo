@@ -1,7 +1,10 @@
 fileFormatVersion: 2
-guid: debba407b1dbe5e4abb032ded69e0d2a
+guid: d8cd8be68e0e3c84191a11b2f0f48c12
 TextureImporter:
-  internalIDToNameTable: []
+  internalIDToNameTable:
+  - first:
+      213: -8791735552748483349
+    second: barstest_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -53,7 +56,9 @@ TextureImporter:
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
+  spriteTessellationMethod: 0
   spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
@@ -93,106 +98,93 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: Android
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bartest_0
+      name: barstest_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 412
-        width: 1008
-        height: 100
+        x: 2
+        y: 415
+        width: 1004
+        height: 97
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 72d4df1e5e26f324d967444d0f0f28fb
-      internalID: -355242321
+      spriteID: bec014b681b7df580800000000000000
+      internalID: -8791735552748483349
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: bartest_1
+      name: barstest_1
       rect:
         serializedVersion: 2
-        x: 0
-        y: 287
-        width: 1008
-        height: 100
+        x: 2
+        y: 288
+        width: 1004
+        height: 97
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6e79373132a68dc45802ddbc54b995d7
-      internalID: -951945095
+      spriteID: 676e9b2ad36ad5147afdc513f2b6ee11
+      internalID: 1214382063
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: bartest_2
+      name: barstest_2
       rect:
         serializedVersion: 2
-        x: 0
-        y: 158
-        width: 1008
-        height: 100
+        x: 2
+        y: 160
+        width: 1004
+        height: 97
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f958044b4ffd1154cbd619f4e4fb8587
-      internalID: -933612651
+      spriteID: c299a89353a510a4abf0bbfca28dcb3b
+      internalID: -157412951
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: bartest_3
+      name: barstest_3
       rect:
         serializedVersion: 2
-        x: 0
-        y: 31
-        width: 1008
-        height: 100
+        x: 2
+        y: 33
+        width: 1004
+        height: 97
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 96fef39402e70684e8f0e711d9ee51e9
-      internalID: -300590226
+      spriteID: 45bf383e0b13f7b42892813b3c5656de
+      internalID: 1133899373
       vertices: []
       indices: 
       edges: []
@@ -201,7 +193,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 92872de742f1b4840a59543b6dd1107a
+    spriteID: 406b04f44f18ea04ea57749b857ac7fd
     internalID: 0
     vertices: []
     indices: 
@@ -209,12 +201,14 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      bartest_0: -355242321
-      bartest_1: -951945095
-      bartest_2: -933612651
-      bartest_3: -300590226
+      barstest_0: -8791735552748483349
+      barstest_1: 1214382063
+      barstest_2: -157412951
+      barstest_3: 1133899373
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

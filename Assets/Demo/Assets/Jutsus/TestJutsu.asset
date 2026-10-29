@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::JutsuDefinition
   JutsuName: Fireball
   Description: This is the test jutsu
-  JutsuIcon: {fileID: 21300000, guid: 029dbafddf9d8014996794221c41f5e0, type: 3}
+  JutsuIcon: {fileID: 21300000, guid: fcb1bcbb8dad0114b9b3c6916162c05c, type: 3}
   Stats:
   - key: 1
     value:

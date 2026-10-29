@@ -1,29 +1,32 @@
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
-
-[CreateAssetMenu(menuName = "Jutsus/Behaviours/Test Jutsu")]
-
-public class TestJutsu : JutsuBehaviour
+namespace GonzoDemo
 {
-    public GameObject ProjectilePrefab;
-    public float Speed = 15f;
+	[CreateAssetMenu(menuName = "Jutsus/Behaviours/Test Jutsu")]
 
-	public override IEnumerator OnServerCast(JutsuContext ctx)
+	public class TestJutsu : JutsuBehaviour
 	{
-		GameObject projectile = Instantiate(
-		   ProjectilePrefab,
-		   ctx.CastOrigin.position,
-		   ctx.CastOrigin.rotation
-	   );
+		public GameObject ProjectilePrefab;
+		public float Speed = 1500f;
 
-		projectile.GetComponent<Rigidbody>().linearVelocity =
-			ctx.CastOrigin.forward * Speed;
+		public override IEnumerator OnServerCast(JutsuContext ctx)
+		{
+			GameObject projectile = Instantiate(
+			   ProjectilePrefab,
+			   ctx.CastOrigin,
+			   Quaternion.Euler(ctx.CastAngle)
+		   );
 
-		projectile.GetComponent<Unity.Netcode.NetworkObject>()
-			.Spawn();
+			projectile.GetComponent<ProjectileBase>().Speed = Speed;
+			projectile.GetComponent<NetworkObject>()
+				.Spawn();
 
-		yield break;
+			projectile.GetComponent<ProjectileBase>().Initialize(ctx.Controller.GetComponentInParent<NetworkObject>());
+
+			yield break;
+		}
+
+
 	}
-
-
 }

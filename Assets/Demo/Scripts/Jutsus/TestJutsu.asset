@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72d97837740247147b9885e5a2c3e71d, type: 3}
   m_Name: TestJutsu
   m_EditorClassIdentifier: Assembly-CSharp::TestJutsu
-  ProjectilePrefab: {fileID: 0}
-  Speed: 15
+  ProjectilePrefab: {fileID: 3093287592890558295, guid: 8251bd65bde87924eab0a4a3436b35ef, type: 3}
+  Speed: 2500

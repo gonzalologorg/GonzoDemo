@@ -2,7 +2,7 @@ using UnityEngine;
 using Unity.Netcode.Components;
 using Blocks.Gameplay.Core;
 
-namespace Gonzo
+namespace GonzoDemo
 {
 	/// <summary>
 	/// Controls the player's Animator component based on the state of the <see cref="CoreMovement"/> controller.

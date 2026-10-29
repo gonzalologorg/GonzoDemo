@@ -1,10 +1,13 @@
 using UnityEngine;
+namespace GonzoDemo
+{
 
-[CreateAssetMenu(
+	[CreateAssetMenu(
 	fileName = "Misc",
 	menuName = "Content/Items/Misc",
 	order = 1
 )]
-public class Misc : ItemDefinition
-{
+	public class Misc : ItemDefinition
+	{
+	}
 }

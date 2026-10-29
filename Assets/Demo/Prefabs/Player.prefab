@@ -19,7 +19,6 @@ GameObject:
   - component: {fileID: 8304526126631408150}
   - component: {fileID: 6335676085073359025}
   - component: {fileID: 3043032826464774822}
-  - component: {fileID: 3033748503161582406}
   - component: {fileID: 7829605782087212281}
   - component: {fileID: 1170586312007962060}
   - component: {fileID: 5608448976558012301}
@@ -29,6 +28,8 @@ GameObject:
   - component: {fileID: 2835988216365678153}
   - component: {fileID: 689707170352613087}
   - component: {fileID: 8985596037712640235}
+  - component: {fileID: 6492838721271482510}
+  - component: {fileID: 2822845857665487227}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -91,7 +92,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 1632367415
+  GlobalObjectIdHash: 229119272
   InScenePlacedSourceGlobalObjectIdHash: 0
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -299,9 +300,9 @@ MonoBehaviour:
   m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_PanelSettings: {fileID: 11400000, guid: 078617a76b5fb4433800df5984ca3db2, type: 2}
+  m_PanelSettings: {fileID: 11400000, guid: 9e2b3733534951540ae8f75de324a6c8, type: 2}
   m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: 9197481963319205126, guid: 358dc39ef15ad4c389a09af75d6ac325, type: 3}
+  sourceAsset: {fileID: 9197481963319205126, guid: 8ec0895f302cae640a4f987fe98c2d00, type: 3}
   m_SortingOrder: 0
   m_Position: 0
   m_WorldSpaceSizeMode: 1
@@ -310,23 +311,6 @@ MonoBehaviour:
   m_PivotReferenceSize: 0
   m_Pivot: 0
   m_WorldSpaceCollider: {fileID: 0}
---- !u!114 &3033748503161582406
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4416926081852918481}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 46c12bab726f1470696569b63ff7cd3d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  coreStats: {fileID: 1108927199896854533}
-  onStatChanged: {fileID: 11400000, guid: 3c76cce5664154d7fadbc8eaf8987962, type: 2}
-  onNotification: {fileID: 11400000, guid: d0e3f72c4e5a542f592af1251451389c, type: 2}
-  onRespawnStatusChanged: {fileID: 11400000, guid: 71f658fc8f4634328824b9ea768b8d21, type: 2}
 --- !u!114 &7829605782087212281
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -550,6 +534,42 @@ MonoBehaviour:
   RightHandTransform: {fileID: 1053458802575407530}
   HeadTransform: {fileID: 6747388859620727707}
   WeaponEquipped: {fileID: 0}
+  selectedJutsuIndex: 0
+  IsCastingJutsu: 0
+  IsRecharging: 0
+--- !u!114 &6492838721271482510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4416926081852918481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b604fdc13897233429f0f75753112015, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  ShowTopMostFoldoutHeaderGroup: 1
+  coreStats: {fileID: 1108927199896854533}
+  onStatChanged: {fileID: 0}
+  onRespawnStatusChanged: {fileID: 0}
+--- !u!114 &2822845857665487227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4416926081852918481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc79090c08e7da144a8e36f64e06565f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.JutsuController
+  ShowTopMostFoldoutHeaderGroup: 1
+  startingJutsus:
+  - slot: 0
+    definition: {fileID: 11400000, guid: 85f5f1b1aed1a8f418a4c76dee43b931, type: 2}
+    level: 3
 --- !u!1 &8338988566280778634
 GameObject:
   m_ObjectHideFlags: 0
@@ -763,6 +783,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4350776801823434717, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
   m_PrefabInstance: {fileID: 7044362195075677254}
   m_PrefabAsset: {fileID: 0}
+--- !u!95 &6827659484583295978 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 4540229000190281644, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
+  m_PrefabInstance: {fileID: 7044362195075677254}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &8229242888197149327 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1438546959266459337, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
@@ -788,10 +813,30 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkAnimatorExpanded: 0
   AuthorityMode: 0
-  m_Animator: {fileID: 0}
+  m_Animator: {fileID: 6827659484583295978}
   TransitionStateInfoList: []
   AnimatorParameterEntries:
-    ParameterEntries: []
+    ParameterEntries:
+    - name: Speed
+      NameHash: -823668238
+      Synchronize: 1
+      ParameterType: 1
+    - name: Grounded
+      NameHash: 862969536
+      Synchronize: 1
+      ParameterType: 4
+    - name: FreeFall
+      NameHash: -2098586373
+      Synchronize: 1
+      ParameterType: 4
+    - name: MotionSpeed
+      NameHash: 1939466105
+      Synchronize: 1
+      ParameterType: 1
+    - name: Jump
+      NameHash: 125937960
+      Synchronize: 1
+      ParameterType: 4
   AnimatorParametersExpanded: 0
   coreMovement: {fileID: 7875331226141230548}
 --- !u!82 &7823981702144010973

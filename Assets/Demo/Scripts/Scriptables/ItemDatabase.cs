@@ -1,30 +1,32 @@
 using System.Collections.Generic;
 using UnityEngine;
-
-[CreateAssetMenu(fileName = "ItemDatabase", menuName = "ScriptableObjects/ItemDatabase", order = 1)]
-public class ItemDatabase : ScriptableObject
+namespace GonzoDemo
 {
-    [SerializeField]
-    private ItemDefinition[] items;
-    private Dictionary<string, ItemDefinition> lookup;
-
-    public void Initialize()
+    [CreateAssetMenu(fileName = "ItemDatabase", menuName = "ScriptableObjects/ItemDatabase", order = 1)]
+    public class ItemDatabase : ScriptableObject
     {
-        lookup = new Dictionary<string, ItemDefinition>();
-		foreach (ItemDefinition newItem in items)
-		{
-            if (!lookup.TryAdd(newItem.Id, newItem))
+        [SerializeField]
+        private ItemDefinition[] items;
+        private Dictionary<string, ItemDefinition> lookup;
+
+        public void Initialize()
+        {
+            lookup = new Dictionary<string, ItemDefinition>();
+            foreach (ItemDefinition newItem in items)
             {
-				Debug.LogWarning($"Duplicate item ID {newItem.Id} found in ItemDatabase. Item '{newItem.Name}' will be ignored.");
-			}
-		}
-	}
+                if (!lookup.TryAdd(newItem.Id, newItem))
+                {
+                    Debug.LogWarning($"Duplicate item ID {newItem.Id} found in ItemDatabase. Item '{newItem.Name}' will be ignored.");
+                }
+            }
+        }
 
-    public ItemDefinition Get(string id)
-    {
-        if (lookup == null)
-            Initialize();
+        public ItemDefinition Get(string id)
+        {
+            if (lookup == null)
+                Initialize();
 
-        return lookup.GetValueOrDefault(id);
+            return lookup.GetValueOrDefault(id);
+        }
     }
 }

@@ -13,6 +13,15 @@ namespace GonzoDemo
 	[RequireComponent(typeof(AudioSource))]
 	public class CoreAnimator : NetworkAnimator
 	{
+		/// <summary>
+		/// The owning client drives its own cosmetic animation state, which NetworkAnimator
+		/// then replicates to the other peers.
+		/// </summary>
+		protected override bool OnIsServerAuthoritative()
+		{
+			return false;
+		}
+
 		#region Fields & Properties
 
 		[Header("Component Dependencies")]

@@ -14,7 +14,7 @@ namespace GonzoDemo
     public class PlayerController : NetworkBehaviour
     {
         #region Networked Variables
-        private readonly NetworkVariable<EPlayerState> n_PlayerState = new NetworkVariable<EPlayerState>(PlayerState.Alive, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<EPlayerState> n_PlayerState = new NetworkVariable<EPlayerState>(EPlayerState.Alive, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private readonly NetworkVariable<FixedString64Bytes> n_Name = new NetworkVariable<FixedString64Bytes>(null, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private readonly NetworkVariable<int> n_Level = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private readonly NetworkVariable<int> n_Health = new NetworkVariable<int>(100, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -37,6 +37,7 @@ namespace GonzoDemo
 
         PlayerControls controls;
         JutsuController controller;
+        HUDController hudController;
         #endregion
 
         #region Player State Properties
@@ -49,7 +50,7 @@ namespace GonzoDemo
         {
             controls = new PlayerControls();
 			controller = GetComponent<JutsuController>();
-
+			hudController = GetComponent<HUDController>();
 		}
 
 		public override void OnNetworkSpawn()
@@ -57,7 +58,8 @@ namespace GonzoDemo
             n_Name.OnValueChanged += (oldValue, newValue) =>
             {
                 OnPlayerChangedName?.Invoke(newValue.ToString());
-            };
+                hudController.UpdateName(newValue.ToString());
+			};
 
             if (!IsOwner)
                 return;

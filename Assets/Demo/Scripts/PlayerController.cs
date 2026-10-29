@@ -1,10 +1,34 @@
+using System;
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 namespace GonzoDemo
 {
+    public enum EPlayerState : byte
+    {
+        Alive,
+        Dead,
+        InShop
+    }
     public class PlayerController : NetworkBehaviour
     {
+        #region Networked Variables
+        private readonly NetworkVariable<EPlayerState> n_PlayerState = new NetworkVariable<EPlayerState>(PlayerState.Alive, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<FixedString64Bytes> n_Name = new NetworkVariable<FixedString64Bytes>(null, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<int> n_Level = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<int> n_Health = new NetworkVariable<int>(100, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<int> n_MaxHealth = new NetworkVariable<int>(100, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<int> n_Energy = new NetworkVariable<int>(100, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<int> n_MaxEnergy = new NetworkVariable<int>(100, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public string PlayerName => n_Name.Value.ToString();
+        public EPlayerState PlayerState => n_PlayerState.Value;
+
+        public Action<string> OnPlayerChangedName;
+        #endregion
+
+        #region Fields
         public Transform LeftHandTransform;
         public Transform RightHandTransform;
         public Transform HeadTransform;
@@ -13,11 +37,15 @@ namespace GonzoDemo
 
         PlayerControls controls;
         JutsuController controller;
+        #endregion
+
+        #region Player State Properties
         public int selectedJutsuIndex = 0;
         public bool IsCastingJutsu = false;
         public bool IsRecharging = false;
+        #endregion
 
-		void Awake()
+        void Awake()
         {
             controls = new PlayerControls();
 			controller = GetComponent<JutsuController>();
@@ -26,6 +54,11 @@ namespace GonzoDemo
 
 		public override void OnNetworkSpawn()
 		{
+            n_Name.OnValueChanged += (oldValue, newValue) =>
+            {
+                OnPlayerChangedName?.Invoke(newValue.ToString());
+            };
+
             if (!IsOwner)
                 return;
 
@@ -45,20 +78,35 @@ namespace GonzoDemo
 
         public override void OnNetworkDespawn()
         {
+            n_Name.OnValueChanged -= (oldValue, newValue) =>
+            {
+                OnPlayerChangedName?.Invoke(newValue.ToString());
+            };
+
             if (controls == null)
                 return;
 
             controls.Player.Disable();
         }
 
-		private void OnDestroy()
+        public void SetPlayerName(string newName)
+        {
+            if (IsServer)
+            {
+                n_Name.Value = newName;
+            } else
+            {
+                SetPlayerNameServerRpc(newName);
+            }
+        }
+
+        private void OnDestroy()
 		{
 			controls?.Dispose();
 		}
 
 		public void OnAttack(InputAction.CallbackContext context)
         {
-            Debug.Log("Do Attack");
         }
 
 		public void OnCastJutsu(InputAction.CallbackContext context)
@@ -75,6 +123,15 @@ namespace GonzoDemo
 		{
 			IsCastingJutsu = false;
 		}
-	}
+
+
+        #region RPC Messages
+        [ServerRpc]
+        private void SetPlayerNameServerRpc(string newName)
+        {
+            n_Name.Value = newName;
+        }
+        #endregion
+    }
 
 }

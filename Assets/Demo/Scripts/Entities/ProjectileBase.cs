@@ -46,7 +46,11 @@ namespace GonzoDemo
 			GetComponent<Rigidbody>().Sleep();
 			GetComponent<Rigidbody>().useGravity = false;
 
-			NetworkObject.Despawn(false);
+            if (IsServer)
+			{
+				NetworkObject.Despawn(false);
+			}
+
 			consumed = true;
 
 			if (BaseEffect.GetComponent<ParticleSystem>() != null)

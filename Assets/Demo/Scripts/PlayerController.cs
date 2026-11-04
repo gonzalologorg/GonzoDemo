@@ -55,11 +55,8 @@ namespace GonzoDemo
 
 		public override void OnNetworkSpawn()
 		{
-            n_Name.OnValueChanged += (oldValue, newValue) =>
-            {
-                OnPlayerChangedName?.Invoke(newValue.ToString());
-                hudController.UpdateName(newValue.ToString());
-			};
+			n_Name.OnValueChanged += HandlePlayerNameChanged;
+			ApplyPlayerName(n_Name.Value);
 
             if (!IsOwner)
                 return;
@@ -80,10 +77,7 @@ namespace GonzoDemo
 
         public override void OnNetworkDespawn()
         {
-            n_Name.OnValueChanged -= (oldValue, newValue) =>
-            {
-                OnPlayerChangedName?.Invoke(newValue.ToString());
-            };
+			n_Name.OnValueChanged -= HandlePlayerNameChanged;
 
             if (controls == null)
                 return;
@@ -101,6 +95,18 @@ namespace GonzoDemo
                 SetPlayerNameServerRpc(newName);
             }
         }
+
+		private void HandlePlayerNameChanged(FixedString64Bytes oldValue, FixedString64Bytes newValue)
+		{
+			ApplyPlayerName(newValue);
+		}
+
+		private void ApplyPlayerName(FixedString64Bytes value)
+		{
+			string playerName = value.ToString();
+			OnPlayerChangedName?.Invoke(playerName);
+			hudController?.UpdateName(playerName);
+		}
 
         private void OnDestroy()
 		{

@@ -6,6 +6,7 @@ namespace GonzoDemo
     public class DefaultStats : ScriptableObject
     {
         public float health = 100f;
+        [Min(0f)] public float chakra = 100f;
         public float cooldown = 0f;
         public float damage = 10f;
         public float speed = 5f;

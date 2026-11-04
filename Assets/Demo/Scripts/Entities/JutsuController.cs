@@ -23,12 +23,14 @@ namespace GonzoDemo
 		public Dictionary<int, JutsuInstance> Jutsus = new Dictionary<int, JutsuInstance>();
 		PlayerController controller;
 		HUDController hudController;
+		PlayerStats playerStats;
 
 		public override void OnNetworkSpawn()
 		{
 			//if (IsServer)
 
 			controller = GetComponent<PlayerController>();
+			playerStats = GetComponent<PlayerStats>();
 			hudController = GetComponent<HUDController>();
 			BuildRuntimeJutsus();
 
@@ -37,6 +39,7 @@ namespace GonzoDemo
 		private void BuildRuntimeJutsus()
 		{
 			Jutsus.Clear();
+			if (IsOwner) hudController?.ClearJutsus();
 
 			foreach (JutsuSlotConfig entry in startingJutsus)
 			{
@@ -58,13 +61,17 @@ namespace GonzoDemo
 				};
 
 				Jutsus.Add(entry.slot, instance);
-				hudController?.InstallJutsu(entry.slot, instance);
+				if (IsOwner) hudController?.InstallJutsu(entry.slot, instance);
 			}
 		}
 
 		public void RequestCast(int slot)
 		{
 			if (!IsOwner) return;
+			if (!Jutsus.TryGetValue(slot, out var jutsu) ||
+				jutsu.CooldownEndTime > NetworkManager.ServerTime.Time)
+				return;
+			if (Camera.main == null) return;
 
 			RequestCastServerRpc(slot, Camera.main.transform.eulerAngles);
 		}
@@ -74,8 +81,11 @@ namespace GonzoDemo
 		{
 			if (!Jutsus.TryGetValue(slot, out JutsuInstance jutsu))
 				return;
+			if (jutsu.CooldownEndTime > NetworkManager.ServerTime.Time)
+				return;
 
 			var context = new JutsuContext(jutsu.Definition, jutsu, this, controller.HeadTransform.position, angle);
+			if (jutsu.Definition.Behaviours == null) return;
 			foreach (var behaviour in jutsu.Definition.Behaviours)
 			{
 				if (behaviour == null)
@@ -83,12 +93,31 @@ namespace GonzoDemo
 				if (!behaviour.PreCast(context))
 					return;
 			}
+
+			float chakraCost = context.GetChakraCost();
+			if (chakraCost > 0f && (playerStats == null || !playerStats.TryUseChakra(chakraCost)))
+				return;
+
+			// Reserve the cooldown before starting behaviours so another request cannot cast twice.
+			jutsu.CooldownEndTime = NetworkManager.ServerTime.Time + context.GetCooldown();
+			ConfirmCooldownClientRpc(slot, jutsu.CooldownEndTime, new ClientRpcParams
+			{
+				Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } }
+			});
 			foreach (var behaviour in jutsu.Definition.Behaviours)
 			{
 				if (behaviour == null)
 					continue;
 				StartCoroutine(behaviour.OnServerCast(context));
 			}
+		}
+
+		[ClientRpc]
+		private void ConfirmCooldownClientRpc(int slot, double endTime, ClientRpcParams rpcParams = default)
+		{
+			if (!IsOwner || !Jutsus.TryGetValue(slot, out var jutsu)) return;
+			jutsu.CooldownEndTime = endTime;
+			hudController?.UpdateJutsuCooldown(slot, (float)Math.Max(0d, endTime - NetworkManager.ServerTime.Time));
 		}
 	}
 }

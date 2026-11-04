@@ -16,7 +16,6 @@ namespace GonzoDemo
         #region Networked Variables
         private readonly NetworkVariable<EPlayerState> n_PlayerState = new NetworkVariable<EPlayerState>(EPlayerState.Alive, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private readonly NetworkVariable<FixedString64Bytes> n_Name = new NetworkVariable<FixedString64Bytes>(null, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-        private readonly NetworkVariable<int> n_Level = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private readonly NetworkVariable<int> n_Health = new NetworkVariable<int>(100, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private readonly NetworkVariable<int> n_MaxHealth = new NetworkVariable<int>(100, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private readonly NetworkVariable<int> n_Energy = new NetworkVariable<int>(100, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -66,12 +65,13 @@ namespace GonzoDemo
             controls.Player.CastJutsu.canceled += OnStopJutsu;
             controls.Player.Reload.started += ctx => IsRecharging = true;
             controls.Player.Reload.canceled += ctx => IsRecharging = false;
-            controls.Player.Jutsu1.performed += ctx => selectedJutsuIndex = 0;
-            controls.Player.Jutsu2.performed += ctx => selectedJutsuIndex = 1;
-            controls.Player.Jutsu3.performed += ctx => selectedJutsuIndex = 2;
-            controls.Player.Jutsu4.performed += ctx => selectedJutsuIndex = 3;
-            controls.Player.Jutsu5.performed += ctx => selectedJutsuIndex = 4;
+            controls.Player.Jutsu1.performed += ctx => SelectJutsu(0);
+            controls.Player.Jutsu2.performed += ctx => SelectJutsu(1);
+            controls.Player.Jutsu3.performed += ctx => SelectJutsu(2);
+            controls.Player.Jutsu4.performed += ctx => SelectJutsu(3);
+            controls.Player.Jutsu5.performed += ctx => SelectJutsu(4);
 
+			SelectJutsu(selectedJutsuIndex);
 			controls.Player.Enable();
 		}
 
@@ -112,6 +112,15 @@ namespace GonzoDemo
 		{
 			controls?.Dispose();
 		}
+
+        public void SelectJutsu(int slot)
+        {
+            if (!IsOwner || slot < 0 || slot > 4)
+                return;
+
+            selectedJutsuIndex = slot;
+            hudController?.SelectJutsu(slot);
+        }
 
 		public void OnAttack(InputAction.CallbackContext context)
         {

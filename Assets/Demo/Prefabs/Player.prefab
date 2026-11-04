@@ -618,6 +618,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   onStatChanged: {fileID: 0}
   onRespawnStatusChanged: {fileID: 0}
+  unselectedJutsuOpacity: 0.5
   hudHead: {fileID: 3322005594367164367}
 --- !u!114 &2822845857665487227
 MonoBehaviour:

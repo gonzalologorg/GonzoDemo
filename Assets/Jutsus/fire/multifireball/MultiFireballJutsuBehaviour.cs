@@ -13,6 +13,7 @@ namespace GonzoDemo
 		public override IEnumerator OnServerCast(JutsuContext ctx)
 		{
 			int fireballCount = Mathf.Max(0, Mathf.RoundToInt(ctx.GetStat("count")));
+			int damage = Mathf.Max(0, Mathf.RoundToInt(ctx.GetStat("damage")));
 			Vector3 castOrigin = ctx.GetCastOrigin();
 
 			for (int i = 0; i < fireballCount; i++)
@@ -27,7 +28,8 @@ namespace GonzoDemo
 
 				ProjectileBase projectileBase = projectile.GetComponent<ProjectileBase>();
 				projectileBase.Speed = Speed;
-				//DamageResolver.BindProjectileImpact(projectileBase, ctx.Controller.gameObject);
+				projectileBase.Damage = damage;
+				DamageResolver.BindProjectileImpact(projectileBase, ctx.Controller.gameObject);
 				projectile.GetComponent<NetworkObject>()
 					.Spawn();
 

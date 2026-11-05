@@ -7,26 +7,26 @@ namespace GonzoDemo
 		public JutsuDefinition Definition { get; }
 		public JutsuInstance Instance { get; }
 		public JutsuController Controller { get; }
-		public Vector3 CastOrigin { get; }
-		public Vector3 CastAngle { get; }
+		public Vector3 CastOrigin => GetCastOrigin();
+		public Vector3 CastAngle => GetCastAngle();
 
 		public JutsuContext(
 			JutsuDefinition definition,
 			JutsuInstance instance,
-			JutsuController controller,
-			Vector3 castOrigin,
-			Vector3 castAngle)
+			JutsuController controller)
 		{
 			Definition = definition;
 			Instance = instance;
 			Controller = controller;
-			CastOrigin = castOrigin;
-			CastAngle = castAngle;
 		}
 
 		public float GetStat(string stat)
 		{
-			return Definition.Stats[Instance.Level].TryGetValue(stat, out var value) ? value : 0;
+			if (Definition?.Stats == null || Instance == null ||
+				!Definition.Stats.TryGetValue(Instance.Level, out var levelStats) || levelStats == null)
+				return 0f;
+
+			return levelStats.TryGetValue(stat, out var value) ? value : 0f;
 		}
 
 		public int GetLevel() => Instance.Level;
@@ -40,6 +40,21 @@ namespace GonzoDemo
 			// Levels start at 1; balance lists start at index 0.
 			int index = Mathf.Clamp(Instance.Level - 1, 0, cooldowns.Count - 1);
 			return Mathf.Max(0f, cooldowns[index]);
+		}
+
+		public Vector3 GetCastOrigin()
+		{
+			PlayerController playerController = Controller != null
+				? Controller.GetComponent<PlayerController>()
+				: null;
+			return playerController != null && playerController.HeadTransform != null
+				? playerController.HeadTransform.position
+				: Controller != null ? Controller.transform.position : Vector3.zero;
+		}
+
+		public Vector3 GetCastAngle()
+		{
+			return Controller != null ? Controller.GetAimAngle() : Vector3.zero;
 		}
 
 		public float GetChakraCost()

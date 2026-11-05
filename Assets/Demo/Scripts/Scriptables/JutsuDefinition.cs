@@ -29,5 +29,23 @@ namespace GonzoDemo
 
 		[Header("Behaviours")]
 		public List<JutsuBehaviour> Behaviours;
+
+		public int MaxLevel
+		{
+			get
+			{
+				int maxLevel = 0;
+				if (Stats != null)
+					foreach (int level in Stats.Keys)
+						maxLevel = Mathf.Max(maxLevel, level);
+
+				if (Cost != null)
+					maxLevel = Mathf.Max(maxLevel, Cost.Count);
+				if (Cooldown != null)
+					maxLevel = Mathf.Max(maxLevel, Cooldown.Count);
+
+				return Mathf.Max(1, maxLevel);
+			}
+		}
 	}
 }

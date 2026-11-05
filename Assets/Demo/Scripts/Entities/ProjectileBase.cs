@@ -14,6 +14,7 @@ namespace GonzoDemo
         public float Speed = 15f;
         [Min(0f)] public float Damage = 10f;
 
+        public event Action<Collider> OnHit;
         public Action<Collider> OnImpact;
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -28,6 +29,12 @@ namespace GonzoDemo
 			if (!IsServer) return;
 			casterObjectId.Value = caster.NetworkObjectId;
 		}
+
+        public override void OnNetworkDespawn()
+        {
+            DisableProjectileCollisions();
+            base.OnNetworkDespawn();
+        }
 
         // Update is called once per frame
         void FixedUpdate()
@@ -44,25 +51,50 @@ namespace GonzoDemo
 
         public void Remove()
         {
-			GetComponent<Rigidbody>().Sleep();
-			GetComponent<Rigidbody>().useGravity = false;
+            if (consumed)
+                return;
+
+            consumed = true;
+            RemoveProjectileObject();
+        }
+
+        private void RemoveProjectileObject()
+        {
+            DisableProjectileCollisions();
 
             if (IsServer)
 			{
 				NetworkObject.Despawn(false);
 			}
 
-			consumed = true;
-
-			if (BaseEffect.GetComponent<ParticleSystem>() != null)
+			if (BaseEffect != null && BaseEffect.GetComponent<ParticleSystem>() != null)
 				BaseEffect.GetComponent<ParticleSystem>().Stop();
 
-			ImpactEffect.SetActive(true);
-			if (ImpactEffect.GetComponent<ParticleSystem>() != null)
-				ImpactEffect.GetComponent<ParticleSystem>().Play();
+			if (ImpactEffect != null)
+			{
+				ImpactEffect.SetActive(true);
+				if (ImpactEffect.GetComponent<ParticleSystem>() != null)
+					ImpactEffect.GetComponent<ParticleSystem>().Play();
+			}
 
 			Destroy(gameObject, 1f);
 		}
+
+        private void DisableProjectileCollisions()
+        {
+            foreach (Collider projectileCollider in GetComponentsInChildren<Collider>(true))
+            {
+                projectileCollider.enabled = false;
+            }
+
+            Rigidbody rigidbody = GetComponent<Rigidbody>();
+            if (rigidbody != null)
+            {
+                rigidbody.Sleep();
+                rigidbody.useGravity = false;
+                rigidbody.detectCollisions = false;
+            }
+        }
 
         bool consumed = false;
         private void OnTriggerEnter(Collider other)
@@ -76,8 +108,9 @@ namespace GonzoDemo
             }
 
             consumed = true;
+            OnHit?.Invoke(other);
             OnImpact?.Invoke(other);
-            Remove();
+            RemoveProjectileObject();
 		}
     }
 }

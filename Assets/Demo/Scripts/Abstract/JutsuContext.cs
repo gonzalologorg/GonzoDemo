@@ -57,6 +57,90 @@ namespace GonzoDemo
 			return Controller != null ? Controller.GetAimAngle() : Vector3.zero;
 		}
 
+		/// <summary>
+		/// Finds a walkable ground position along the player's aim, falling back to the ground
+		/// below a point at the requested horizontal distance when the aim ray points into the air.
+		/// </summary>
+		public bool CastEmptyGround(float distance, out Vector3 targetPosition)
+		{
+			Vector3 origin = GetCastOrigin();
+			Vector3 aimDirection = Quaternion.Euler(GetCastAngle()) * Vector3.forward;
+			float rayDistance = Mathf.Max(0f, distance);
+
+			if (TryFindWalkableSurface(origin, aimDirection, rayDistance, out RaycastHit aimHit))
+			{
+				targetPosition = aimHit.point;
+				return true;
+			}
+
+			Vector3 flatDirection = GetFlatAimDirection();
+			Vector3 groundProbePoint = origin + flatDirection * rayDistance;
+			float probeHeight = Mathf.Max(100f, Mathf.Abs(origin.y) + 10f);
+			Vector3 probeOrigin = groundProbePoint + Vector3.up * probeHeight;
+
+			if (TryFindWalkableSurface(probeOrigin, Vector3.down, probeHeight * 2f, out RaycastHit groundHit))
+			{
+				targetPosition = groundHit.point;
+				return true;
+			}
+
+			targetPosition = groundProbePoint;
+			return false;
+		}
+
+		/// <summary>Returns the player's aim direction projected onto the horizontal plane.</summary>
+		public Vector3 GetFlatAimDirection()
+		{
+			Vector3 direction = Vector3.ProjectOnPlane(
+				Quaternion.Euler(GetCastAngle()) * Vector3.forward,
+				Vector3.up);
+
+			if (direction.sqrMagnitude < 0.0001f)
+			{
+				direction = Controller != null
+					? Vector3.ProjectOnPlane(Controller.transform.forward, Vector3.up)
+					: Vector3.forward;
+			}
+
+			return direction.normalized;
+		}
+
+		private bool TryFindWalkableSurface(Vector3 origin, Vector3 direction, float distance, out RaycastHit nearestHit)
+		{
+			nearestHit = default;
+			if (distance <= 0f || direction.sqrMagnitude < 0.0001f)
+				return false;
+
+			RaycastHit[] hits = Physics.RaycastAll(
+				origin,
+				direction.normalized,
+				distance,
+				Physics.DefaultRaycastLayers,
+				QueryTriggerInteraction.Ignore);
+
+			Transform playerRoot = Controller != null ? Controller.transform.root : null;
+			float nearestDistance = float.MaxValue;
+			bool foundSurface = false;
+
+			foreach (RaycastHit hit in hits)
+			{
+				if (hit.collider == null || hit.normal.y < 0.5f ||
+					(playerRoot != null && hit.collider.transform.root == playerRoot))
+				{
+					continue;
+				}
+
+				if (hit.distance >= nearestDistance)
+					continue;
+
+				nearestDistance = hit.distance;
+				nearestHit = hit;
+				foundSurface = true;
+			}
+
+			return foundSurface;
+		}
+
 		public float GetChakraCost()
 		{
 			var costs = Definition.Cost;

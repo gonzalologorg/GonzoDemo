@@ -2379,6 +2379,7 @@ MonoBehaviour:
   ImpactEffect: {fileID: 4570249782849697400}
   LifeTime: 5
   Speed: 1500
+  Damage: 20
 --- !u!54 &7254530316183150063
 Rigidbody:
   m_ObjectHideFlags: 0

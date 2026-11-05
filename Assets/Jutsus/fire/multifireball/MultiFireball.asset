@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7d7698ebf0d3a3642b754f08a7bd124a, type: 3}
   m_Name: MultiFireball
-  m_EditorClassIdentifier: Assembly-CSharp::JutsuDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.JutsuDefinition
   JutsuName: Multi Fireball
   Description: This jutsu throws <color=#55AAFF>@count</color> fireball, each one deals <color=#FF4444>@damage</color> damage
   JutsuIcon: {fileID: 21300000, guid: fcb1bcbb8dad0114b9b3c6916162c05c, type: 3}

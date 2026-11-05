@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7d7698ebf0d3a3642b754f08a7bd124a, type: 3}
   m_Name: Fireball
-  m_EditorClassIdentifier: Assembly-CSharp::JutsuDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.JutsuDefinition
   JutsuName: Fireball
   Description: This jutsu throws a big fireball dealing <color=#FF4444>@damage</color> damage
   JutsuIcon: {fileID: 21300000, guid: 029dbafddf9d8014996794221c41f5e0, type: 3}

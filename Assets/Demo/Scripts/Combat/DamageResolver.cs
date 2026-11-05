@@ -1,4 +1,6 @@
 using UnityEngine;
+using Unity.Netcode;
+using GonzoDemo.Combat;
 
 namespace GonzoDemo
 {
@@ -29,7 +31,7 @@ namespace GonzoDemo
             return healthBefore - victim.GetStat(PlayerStats.StatType.Health);
         }
 
-        /// <summary>Routes projectile impacts through DamageInfo and this resolver.</summary>
+        /// <summary>Routes projectile hits to destructible targets or player stats.</summary>
         public static void BindProjectileImpact(
             ProjectileBase projectile,
             GameObject attacker,
@@ -38,22 +40,41 @@ namespace GonzoDemo
             if (projectile == null)
                 return;
 
-            projectile.OnImpact += hitCollider =>
+            projectile.OnHit += hitCollider =>
             {
                 if (hitCollider == null)
                     return;
+
+                Vector3 hitPosition = hitCollider.ClosestPoint(projectile.transform.position);
+                Vector3 impactForce = projectile.transform.forward * projectile.Damage;
+                NetworkObject attackerNetworkObject = attacker != null
+                    ? attacker.GetComponentInParent<NetworkObject>() ?? attacker.GetComponentInChildren<NetworkObject>()
+                    : null;
+
+                IHittable hittable = hitCollider.GetComponentInParent<IHittable>();
+                if (hittable != null)
+                {
+                    hittable.OnHit(new HitInfo
+                    {
+                        amount = projectile.Damage,
+                        hitPoint = hitPosition,
+                        hitNormal = -projectile.transform.forward,
+                        attackerId = attackerNetworkObject != null ? attackerNetworkObject.OwnerClientId : 0,
+                        impactForce = impactForce
+                    });
+                    return;
+                }
 
                 PlayerStats victim = hitCollider.GetComponentInParent<PlayerStats>();
                 if (victim == null)
                     return;
 
-                Vector3 hitPosition = hitCollider.ClosestPoint(projectile.transform.position);
                 var damageInfo = new DamageInfo(
                     projectile.Damage,
                     attacker,
                     projectile.gameObject,
                     damageType,
-                    projectile.transform.forward * projectile.Damage,
+                    impactForce,
                     hitPosition,
                     hitCollider);
 

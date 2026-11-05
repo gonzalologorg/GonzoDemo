@@ -6,61 +6,6 @@ using Unity.Collections;
 namespace Blocks.Gameplay.Core
 {
     /// <summary>
-    /// A struct that encapsulates all the necessary information about a single "hit" event.
-    /// This is used to pass data from a source of damage (like a projectile or weapon) to a target
-    /// that implements the <see cref="IHittable"/> interface. It is network-serializable to allow
-    /// hit information to be sent from a client to the server for authoritative processing.
-    /// </summary>
-    [Serializable]
-    public struct HitInfo : INetworkSerializable
-    {
-        #region Fields
-
-        /// <summary>
-        /// The base amount of damage or effect magnitude.
-        /// </summary>
-        public float amount;
-
-        /// <summary>
-        /// The world-space coordinate where the hit occurred.
-        /// </summary>
-        public Vector3 hitPoint;
-
-        /// <summary>
-        /// The surface normal at the point of impact.
-        /// </summary>
-        public Vector3 hitNormal;
-
-        /// <summary>
-        /// The NetworkObjectId of the player or entity that initiated the hit.
-        /// </summary>
-        public ulong attackerId;
-
-        /// <summary>
-        /// The physical force to be applied at the hit point, used for knockback or physics reactions.
-        /// </summary>
-        public Vector3 impactForce;
-
-        #endregion
-
-        #region INetworkSerializable Implementation
-
-        /// <summary>
-        /// Defines how the struct data is written to and read from the network stream.
-        /// </summary>
-        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
-        {
-            serializer.SerializeValue(ref amount);
-            serializer.SerializeValue(ref hitPoint);
-            serializer.SerializeValue(ref hitNormal);
-            serializer.SerializeValue(ref attackerId);
-            serializer.SerializeValue(ref impactForce);
-        }
-
-        #endregion
-    }
-
-    /// <summary>
     /// A struct representing the current state of a single gameplay stat (e.g., Health, Stamina) at runtime.
     /// This structure is designed to be lightweight and efficient for network synchronization within a <see cref="NetworkList{T}"/>.
     /// It implements <see cref="INetworkSerializable"/> to define how its data is sent over the network and

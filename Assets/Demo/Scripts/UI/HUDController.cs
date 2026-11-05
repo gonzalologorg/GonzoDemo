@@ -2,6 +2,8 @@ using Blocks.Gameplay.Core;
 using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
@@ -10,6 +12,9 @@ using UnityEngine.UIElements;
 [RequireComponent(typeof(UIDocument))]
 public class HUDController : NetworkBehaviour
 {
+	private const float JutsuInfoVisibleDuration = 3f;
+	private const float JutsuInfoFadeDuration = 0.25f;
+
 	[Header("Listening to Events")]
 	[SerializeField] private StatChangeEvent onStatChanged;
 	[SerializeField] private RespawnStatusEvent onRespawnStatusChanged;
@@ -18,6 +23,9 @@ public class HUDController : NetworkBehaviour
 	private GonzoDemo.PlayerStats playerStats;
 	private string displayedName = string.Empty;
 	private int displayedLevel = 1;
+	private int selectedJutsuSlot = -1;
+	private float jutsuInfoOpacity;
+	private Coroutine hideJutsuInfoRoutine;
 	private readonly Dictionary<int, GonzoDemo.JutsuInstance> installedJutsus = new Dictionary<int, GonzoDemo.JutsuInstance>();
 
 	#region UI Elements
@@ -28,6 +36,9 @@ public class HUDController : NetworkBehaviour
 	private Image uiHealthBar;
 	private Image uiChakraBar;
 	private VisualElement uiXPBar;
+	private VisualElement uiJutsuInfo;
+	private Label uiJutsuDescription;
+	private Label uiJutsuName;
 	public VisualElement[] uiJutsuControls = new VisualElement[5];
 	public Canvas hudHead;
 	Camera mainCamera;
@@ -69,6 +80,14 @@ public class HUDController : NetworkBehaviour
 			playerStats.OnStatChanged -= HandlePlayerStatChanged;
 		}
 		if (onStatChanged != null) onStatChanged.UnregisterListener(HandleStatChanged);
+		if (hideJutsuInfoRoutine != null)
+		{
+			StopCoroutine(hideJutsuInfoRoutine);
+			hideJutsuInfoRoutine = null;
+		}
+		SetJutsuInfoOpacity(0f);
+		if (uiJutsuInfo != null)
+			uiJutsuInfo.style.display = DisplayStyle.None;
 	}
 
 	void Awake()
@@ -135,6 +154,13 @@ public class HUDController : NetworkBehaviour
 		uiHealthBar = root.Q<Image>("HealthFill");
 		uiChakraBar = root.Q<Image>("ChakraFill");
 		uiXPBar = root.Q<VisualElement>("XPBar");
+		uiJutsuInfo = root.Q<VisualElement>("JutsuInfo");
+		uiJutsuDescription = root.Q<Label>("JutsuDescription");
+		uiJutsuName = root.Q<Label>("JutsuName");
+		if (uiJutsuDescription != null)
+			uiJutsuDescription.enableRichText = true;
+		if (uiJutsuInfo != null)
+			uiJutsuInfo.style.display = DisplayStyle.None;
 		if (uiXPBar != null)
 		{
 			uiXPBar.style.flexGrow = 0f;
@@ -195,11 +221,18 @@ public class HUDController : NetworkBehaviour
 		if (slot < 0 || slot >= uiJutsuControls.Length)
 			return;
 
+		selectedJutsuSlot = slot;
+
 		for (int i = 0; i < uiJutsuControls.Length; i++)
 		{
 			if (uiJutsuControls[i] != null)
 				uiJutsuControls[i].style.opacity = i == slot ? 1f : unselectedJutsuOpacity;
 		}
+
+		if (installedJutsus.TryGetValue(slot, out var instance))
+			ShowJutsuInfo(instance);
+		else
+			HideJutsuInfo();
 	}
 
 	public void InstallJutsu(int slot, GonzoDemo.JutsuInstance instance)
@@ -217,6 +250,8 @@ public class HUDController : NetworkBehaviour
 		}
 		if (instance == null || instance.Definition == null) return;
 		installedJutsus[slot] = instance;
+		if (slot == selectedJutsuSlot)
+			ShowJutsuInfo(instance);
 		var iconImage = jutsuControl.Q<Image>("JutsuIcon");
 		var cooldownIcon = jutsuControl.Q<Image>("CDJutsuIcon");
 		var sprite = instance.Definition.JutsuIcon;
@@ -236,6 +271,8 @@ public class HUDController : NetworkBehaviour
 	public void ClearJutsus()
 	{
 		installedJutsus.Clear();
+		selectedJutsuSlot = -1;
+		HideJutsuInfo(false);
 		for (int slot = 0; slot < uiJutsuControls.Length; slot++)
 		{
 			var icon = uiJutsuControls[slot]?.Q<Image>("JutsuIcon");
@@ -243,6 +280,107 @@ public class HUDController : NetworkBehaviour
 				icon.style.unityBackgroundImageTintColor = new Color(0f, 0f, 0f, 0.5f);
 			UpdateJutsuCooldown(slot, 0f);
 		}
+	}
+
+	private void ShowJutsuInfo(GonzoDemo.JutsuInstance instance)
+	{
+		if (uiJutsuInfo == null || instance?.Definition == null)
+			return;
+
+		if (hideJutsuInfoRoutine != null)
+		{
+			StopCoroutine(hideJutsuInfoRoutine);
+			hideJutsuInfoRoutine = null;
+		}
+
+		if (uiJutsuName != null)
+			uiJutsuName.text = instance.Definition.JutsuName;
+		if (uiJutsuDescription != null)
+			uiJutsuDescription.text = ResolveJutsuDescription(instance);
+
+		SetJutsuInfoOpacity(0f);
+		uiJutsuInfo.style.display = DisplayStyle.Flex;
+		hideJutsuInfoRoutine = StartCoroutine(ShowAndHideJutsuInfo());
+	}
+
+	private string ResolveJutsuDescription(GonzoDemo.JutsuInstance instance)
+	{
+		string description = instance.Definition.Description ?? string.Empty;
+		if (instance.Definition.Stats == null ||
+			!instance.Definition.Stats.TryGetValue(instance.Level, out var levelStats) || levelStats == null)
+			return description;
+
+		return Regex.Replace(description, @"@([A-Za-z_][A-Za-z0-9_]*)", match =>
+		{
+			string statName = match.Groups[1].Value;
+			return levelStats.TryGetValue(statName, out float value)
+				? value.ToString("0.##", CultureInfo.InvariantCulture)
+				: match.Value;
+		});
+	}
+
+	private IEnumerator ShowAndHideJutsuInfo()
+	{
+		yield return FadeJutsuInfo(0f, 1f, JutsuInfoFadeDuration);
+		float remainingVisibleTime = Mathf.Max(0f, JutsuInfoVisibleDuration - 2f * JutsuInfoFadeDuration);
+		if (remainingVisibleTime > 0f)
+			yield return new WaitForSecondsRealtime(remainingVisibleTime);
+		yield return FadeJutsuInfo(1f, 0f, JutsuInfoFadeDuration);
+
+		if (uiJutsuInfo != null)
+			uiJutsuInfo.style.display = DisplayStyle.None;
+		hideJutsuInfoRoutine = null;
+	}
+
+	private void HideJutsuInfo(bool animate = true)
+	{
+		if (hideJutsuInfoRoutine != null)
+		{
+			StopCoroutine(hideJutsuInfoRoutine);
+			hideJutsuInfoRoutine = null;
+		}
+
+		if (uiJutsuInfo == null)
+			return;
+
+		if (animate && uiJutsuInfo.style.display == DisplayStyle.Flex)
+		{
+			hideJutsuInfoRoutine = StartCoroutine(FadeOutJutsuInfo());
+			return;
+		}
+
+		SetJutsuInfoOpacity(0f);
+		uiJutsuInfo.style.display = DisplayStyle.None;
+	}
+
+	private IEnumerator FadeOutJutsuInfo()
+	{
+		yield return FadeJutsuInfo(jutsuInfoOpacity, 0f, JutsuInfoFadeDuration);
+		if (uiJutsuInfo != null)
+			uiJutsuInfo.style.display = DisplayStyle.None;
+		hideJutsuInfoRoutine = null;
+	}
+
+	private IEnumerator FadeJutsuInfo(float from, float to, float duration)
+	{
+		float elapsed = 0f;
+		SetJutsuInfoOpacity(from);
+		while (elapsed < duration)
+		{
+			elapsed += Time.unscaledDeltaTime;
+			SetJutsuInfoOpacity(Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / duration)));
+			yield return null;
+		}
+		SetJutsuInfoOpacity(to);
+	}
+
+	private void SetJutsuInfoOpacity(float opacity)
+	{
+		jutsuInfoOpacity = Mathf.Clamp01(opacity);
+		if (uiJutsuName != null)
+			uiJutsuName.style.opacity = jutsuInfoOpacity;
+		if (uiJutsuDescription != null)
+			uiJutsuDescription.style.opacity = jutsuInfoOpacity;
 	}
 
 	public void UpdateJutsuCooldown(int slot, float remaining)

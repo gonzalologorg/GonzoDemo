@@ -12,8 +12,9 @@ namespace GonzoDemo
 
         public float LifeTime = 5f;
         public float Speed = 15f;
+        [Min(0f)] public float Damage = 10f;
 
-        public Action OnImpact;
+        public Action<Collider> OnImpact;
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
@@ -74,6 +75,8 @@ namespace GonzoDemo
                 return;
             }
 
+            consumed = true;
+            OnImpact?.Invoke(other);
             Remove();
 		}
     }

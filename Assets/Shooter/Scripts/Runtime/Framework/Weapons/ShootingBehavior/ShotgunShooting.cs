@@ -1,6 +1,8 @@
 using UnityEngine;
 using Unity.Netcode;
 using Blocks.Gameplay.Core;
+using DemoHitInfo = GonzoDemo.Combat.HitInfo;
+using DemoHittable = GonzoDemo.Combat.IHittable;
 
 namespace Blocks.Gameplay.Shooter
 {
@@ -70,10 +72,10 @@ namespace Blocks.Gameplay.Shooter
                     float damage = damagePerPellet * falloffMultiplier;
                     context.Weapon.PlayImpactEffect(hit.point, hit.normal, damage, parentRef);
 
-                    var hittable = hit.collider.GetComponentInParent<IHittable>();
+                    var hittable = hit.collider.GetComponentInParent<DemoHittable>();
                     if (hittable != null)
                     {
-                        var hitInfo = new HitInfo
+                        var hitInfo = new DemoHitInfo
                         {
                             amount = damage,
                             hitPoint = hit.point,

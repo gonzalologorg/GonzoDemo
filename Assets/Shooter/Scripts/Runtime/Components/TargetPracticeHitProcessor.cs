@@ -2,6 +2,8 @@ using UnityEngine;
 using Unity.Netcode;
 using Blocks.Gameplay.Core;
 using UnityEngine.Playables;
+using DemoHitInfo = GonzoDemo.Combat.HitInfo;
+using DemoHitProcessor = GonzoDemo.Combat.HitProcessor;
 
 namespace Blocks.Gameplay.Shooter
 {
@@ -9,7 +11,7 @@ namespace Blocks.Gameplay.Shooter
     /// A hit processor for target practice objects that plays a Timeline animation when hit.
     /// Optionally plays a sound and spawns VFX.
     /// </summary>
-    public class TargetPracticeHitProcessor : HitProcessor
+    public class TargetPracticeHitProcessor : DemoHitProcessor
     {
         #region Fields & Properties
 
@@ -36,7 +38,7 @@ namespace Blocks.Gameplay.Shooter
         /// Handles the hit event by triggering the visual and audio effects across all clients.
         /// </summary>
         /// <param name="info">Contains information about the hit, including the hit point location.</param>
-        protected override void HandleHit(HitInfo info)
+        protected override void HandleHit(DemoHitInfo info)
         {
             PlayHitEffectsRpc(info.hitPoint);
         }

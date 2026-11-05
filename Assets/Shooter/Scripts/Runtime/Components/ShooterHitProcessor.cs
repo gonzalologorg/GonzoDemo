@@ -3,10 +3,12 @@ using Unity.Netcode;
 using Unity.Cinemachine;
 using System.Collections;
 using Blocks.Gameplay.Core;
+using DemoHitInfo = GonzoDemo.Combat.HitInfo;
+using DemoHitProcessor = GonzoDemo.Combat.HitProcessor;
 
 namespace Blocks.Gameplay.Shooter
 {
-    public class ShooterHitProcessor : HitProcessor
+    public class ShooterHitProcessor : DemoHitProcessor
     {
         #region Fields & Properties
 
@@ -52,7 +54,7 @@ namespace Blocks.Gameplay.Shooter
 
         #region Protected Methods
 
-        protected override void HandleHit(HitInfo info)
+        protected override void HandleHit(DemoHitInfo info)
         {
             if (info.attackerId == OwnerClientId)
             {
@@ -88,7 +90,7 @@ namespace Blocks.Gameplay.Shooter
 
         #region Private Methods
 
-        private float CalculateDamage(HitInfo info)
+        private float CalculateDamage(DemoHitInfo info)
         {
             float damage = info.amount;
             if (hasArmor)

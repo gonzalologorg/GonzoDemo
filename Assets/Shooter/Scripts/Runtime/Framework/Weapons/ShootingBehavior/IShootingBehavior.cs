@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Blocks.Gameplay.Core;
+using DemoHitInfo = GonzoDemo.Combat.HitInfo;
 
 namespace Blocks.Gameplay.Shooter
 {
@@ -103,9 +104,9 @@ namespace Blocks.Gameplay.Shooter
 
         /// <summary>
         /// Callback invoked when a target is hit.
-        /// Parameters are the hit GameObject and the <see cref="HitInfo"/> containing hit details.
+        /// Parameters are the hit GameObject and the hit data containing hit details.
         /// </summary>
-        public Action<GameObject, HitInfo> OnTargetHit;
+        public Action<GameObject, DemoHitInfo> OnTargetHit;
 
         /// <summary>
         /// Callback invoked when the hit point is calculated.

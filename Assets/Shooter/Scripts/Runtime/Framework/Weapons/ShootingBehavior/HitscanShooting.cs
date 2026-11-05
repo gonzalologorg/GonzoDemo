@@ -1,6 +1,8 @@
 using UnityEngine;
 using Unity.Netcode;
 using Blocks.Gameplay.Core;
+using DemoHitInfo = GonzoDemo.Combat.HitInfo;
+using DemoHittable = GonzoDemo.Combat.IHittable;
 
 namespace Blocks.Gameplay.Shooter
 {
@@ -24,7 +26,7 @@ namespace Blocks.Gameplay.Shooter
 
         /// <summary>
         /// Performs a hitscan shot by raycasting from the origin in the specified direction.
-        /// Applies spread, detects hits, triggers visual effects, and applies damage to <see cref="IHittable"/> targets.
+        /// Applies spread, detects hits, triggers visual effects, and applies damage to hittable targets.
         /// </summary>
         /// <param name="context">The shooting context containing all necessary data for the shot.</param>
         public void Shoot(ShootingContext context)
@@ -54,10 +56,10 @@ namespace Blocks.Gameplay.Shooter
             if (hitSomething)
             {
                 context.Weapon.PlayImpactEffect(hit.point, hit.normal, context.damage, parentRef);
-                var hittable = hit.collider.GetComponentInParent<IHittable>();
+                var hittable = hit.collider.GetComponentInParent<DemoHittable>();
                 if (hittable != null)
                 {
-                    var hitInfo = new HitInfo
+                    var hitInfo = new DemoHitInfo
                     {
                         amount = context.damage,
                         hitPoint = hit.point,

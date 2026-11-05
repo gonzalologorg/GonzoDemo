@@ -1,6 +1,8 @@
 using UnityEngine;
 using Unity.Netcode;
 using Blocks.Gameplay.Core;
+using DemoHitInfo = GonzoDemo.Combat.HitInfo;
+using DemoHitProcessor = GonzoDemo.Combat.HitProcessor;
 
 namespace Blocks.Gameplay.Shooter
 {
@@ -10,7 +12,7 @@ namespace Blocks.Gameplay.Shooter
     /// This should be added to any physics-enabled prefabs (like crates, barrels, etc.).
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
-    public class PhysicsObjectHitProcessor : HitProcessor
+    public class PhysicsObjectHitProcessor : DemoHitProcessor
     {
         #region Fields & Properties
 
@@ -36,7 +38,7 @@ namespace Blocks.Gameplay.Shooter
         /// Handles the hit by applying impact force to the rigidbody and playing impact effects.
         /// </summary>
         /// <param name="info">Information about the hit including impact force and hit point.</param>
-        protected override void HandleHit(HitInfo info)
+        protected override void HandleHit(DemoHitInfo info)
         {
             if (m_Rigidbody != null && info.impactForce != Vector3.zero)
             {

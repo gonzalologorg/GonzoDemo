@@ -6,6 +6,8 @@ using Unity.Cinemachine;
 using Blocks.Gameplay.Core;
 using Unity.Netcode.Components;
 using System.Collections.Generic;
+using DemoHitInfo = GonzoDemo.Combat.HitInfo;
+using DemoHittable = GonzoDemo.Combat.IHittable;
 
 namespace Blocks.Gameplay.Shooter
 {
@@ -182,14 +184,14 @@ namespace Blocks.Gameplay.Shooter
             if (!HasAuthority) return;
 
             int hitCount = Physics.OverlapSphereNonAlloc(explosionPosition, explosionRadius, m_HitColliderBuffer, explosionLayerMask);
-            var processedTargets = new HashSet<IHittable>();
+            var processedTargets = new HashSet<DemoHittable>();
 
             for (int i = 0; i < hitCount; i++)
             {
                 var hitCollider = m_HitColliderBuffer[i];
                 if (hitCollider.gameObject == m_Owner) continue;
 
-                var hittable = hitCollider.GetComponentInParent<IHittable>();
+                var hittable = hitCollider.GetComponentInParent<DemoHittable>();
                 if (hittable != null && !processedTargets.Contains(hittable))
                 {
                     processedTargets.Add(hittable);
@@ -199,7 +201,7 @@ namespace Blocks.Gameplay.Shooter
                     float damageFalloff = 1f - Mathf.Clamp01(distance / explosionRadius);
                     float damage = explosionDamage * damageFalloff;
 
-                    var hitInfo = new HitInfo
+                    var hitInfo = new DemoHitInfo
                     {
                         amount = damage,
                         hitPoint = hitCollider.ClosestPoint(explosionPosition),

@@ -37,6 +37,12 @@ namespace GonzoDemo
         PlayerControls controls;
         JutsuController controller;
         HUDController hudController;
+        PlayerStats playerStats;
+        Blocks.Gameplay.Core.CoreMovement coreMovement;
+        bool castingMovementWasEnabled;
+        float castingElapsed;
+        float castingMaxDuration;
+        Action<float> castingCompleted;
         #endregion
 
         #region Player State Properties
@@ -50,7 +56,18 @@ namespace GonzoDemo
             controls = new PlayerControls();
 			controller = GetComponent<JutsuController>();
 			hudController = GetComponent<HUDController>();
+			playerStats = GetComponent<PlayerStats>();
+			coreMovement = GetComponent<Blocks.Gameplay.Core.CoreMovement>();
 		}
+
+        public void SetHealth(int amount) => playerStats?.SetHealth(amount);
+        public int GetHealth() => playerStats != null ? playerStats.GetHealth() : 0;
+        public void AddHealth(int amount) => playerStats?.AddHealth(amount);
+
+        public void SetChakra(int amount) => playerStats?.SetChakra(amount);
+        public int GetChakra() => playerStats != null ? playerStats.GetChakra() : 0;
+        public void AddChakra(int amount) => playerStats?.AddChakra(amount);
+        public bool TryUseChakra(float amount) => playerStats != null && playerStats.TryUseChakra(amount);
 
 		public override void OnNetworkSpawn()
 		{
@@ -78,6 +95,7 @@ namespace GonzoDemo
         public override void OnNetworkDespawn()
         {
 			n_Name.OnValueChanged -= HandlePlayerNameChanged;
+            CancelCasting();
 
             if (controls == null)
                 return;
@@ -110,7 +128,81 @@ namespace GonzoDemo
 
         private void OnDestroy()
 		{
+			CancelCasting();
 			controls?.Dispose();
+		}
+
+		private void Update()
+		{
+			if (!IsOwner || !IsCastingJutsu || castingMaxDuration <= 0f)
+				return;
+
+			Camera mainCamera = Camera.main;
+			if (mainCamera != null)
+			{
+				float yaw = mainCamera.transform.eulerAngles.y;
+				transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+				coreMovement?.SetTargetRotation(yaw);
+			}
+
+			castingElapsed += Time.deltaTime;
+			if (castingElapsed >= castingMaxDuration)
+				CompleteCasting();
+		}
+
+		/// <summary>Locks movement while a held cast runs and invokes its completion callback with 0..1 power.</summary>
+		public void StartCasting(float maxDuration, Action<float> onComplete)
+		{
+			if (!IsOwner || maxDuration <= 0f)
+				return;
+
+			if (IsCastingJutsu && castingMaxDuration > 0f)
+				CancelCasting();
+
+			IsCastingJutsu = true;
+			castingElapsed = 0f;
+			castingMaxDuration = maxDuration;
+			castingCompleted = onComplete;
+			if (coreMovement != null)
+			{
+				castingMovementWasEnabled = coreMovement.IsMovementEnabled;
+				coreMovement.IsMovementEnabled = false;
+			}
+		}
+
+		public void StopCasting()
+		{
+			if (!IsCastingJutsu || castingMaxDuration <= 0f)
+				return;
+
+			CompleteCasting();
+		}
+
+		public void CancelCasting()
+		{
+			if (coreMovement != null && castingMaxDuration > 0f)
+				coreMovement.IsMovementEnabled = castingMovementWasEnabled;
+
+			IsCastingJutsu = false;
+			castingElapsed = 0f;
+			castingMaxDuration = 0f;
+			castingCompleted = null;
+		}
+
+		private void CompleteCasting()
+		{
+			float power = castingMaxDuration > 0f
+				? Mathf.Clamp01(castingElapsed / castingMaxDuration)
+				: 0f;
+			Action<float> callback = castingCompleted;
+			if (coreMovement != null && castingMaxDuration > 0f)
+				coreMovement.IsMovementEnabled = castingMovementWasEnabled;
+
+			IsCastingJutsu = false;
+			castingElapsed = 0f;
+			castingMaxDuration = 0f;
+			castingCompleted = null;
+			callback?.Invoke(power);
 		}
 
         public void SelectJutsu(int slot)
@@ -138,7 +230,10 @@ namespace GonzoDemo
 
         public void OnStopJutsu(InputAction.CallbackContext context)
 		{
-			IsCastingJutsu = false;
+			if (controller != null)
+				controller.StopLocalHoldCast();
+			if (castingMaxDuration <= 0f)
+				IsCastingJutsu = false;
 		}
 
 

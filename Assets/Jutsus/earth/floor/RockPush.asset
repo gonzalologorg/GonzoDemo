@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d7698ebf0d3a3642b754f08a7bd124a, type: 3}
+  m_Name: RockPush
+  m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.JutsuDefinition
+  JutsuName: Rock Push
+  Description: Creates a stone platform that deals <color=red>@damage</color> damage and pushes enemies with <color=yellow>@pushforce</color> force
+  JutsuIcon: {fileID: 21300000, guid: 2453c31b6d20a8d41a60458e8bae50cf, type: 3}
+  Stats:
+  - key: 1
+    value:
+    - key: damage
+      value: 10
+    - key: pushforce
+      value: 10
+  - key: 2
+    value:
+    - key: damage
+      value: 20
+    - key: pushforce
+      value: 15
+  - key: 3
+    value:
+    - key: damage
+      value: 30
+    - key: pushforce
+      value: 20
+  Cost: 28000000320000003c000000i
+  Cooldown: 070000000500000003000000i
+  Behaviours:
+  - {fileID: 11400000, guid: 163b2679db0a8964ab3bfa4fce8702c6, type: 2}

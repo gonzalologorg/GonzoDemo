@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e2fd4ca9cf24e2297c3665d63c1de91, type: 3}
+  m_Name: ElectricZoneBehaviour
+  m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.ElectricZoneBehaviour
+  ZonePrefab: {fileID: 5488162004540905107, guid: ec77ff4cd57350f47a9052ae2b9c1966, type: 3}

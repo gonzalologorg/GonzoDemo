@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d7698ebf0d3a3642b754f08a7bd124a, type: 3}
+  m_Name: ElectricZone
+  m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.JutsuDefinition
+  JutsuName: Electric Zone
+  Description: Creates an electric zone that lasts <color=#66CCFF>@duration</color> s. It will deal <color=#FFDD55>@damage</color> damage per second and reduce speed by <color=#FFDD55>@speed</color>.
+  JutsuIcon: {fileID: 21300000, guid: 141798f5024da574c888488f5942c140, type: 3}
+  Stats:
+  - key: 1
+    value:
+    - key: damage
+      value: 10
+    - key: speed
+      value: 1
+    - key: duration
+      value: 5
+  - key: 2
+    value:
+    - key: damage
+      value: 15
+    - key: speed
+      value: 2
+    - key: duration
+      value: 6
+  - key: 3
+    value:
+    - key: damage
+      value: 20
+    - key: speed
+      value: 3
+    - key: duration
+      value: 7
+  Cost: 000000000000000000000000i
+  Cooldown: 000000000000000000000000i
+  Behaviours:
+  - {fileID: 11400000, guid: c9d865581ee843c2b7d609df7725913f, type: 2}

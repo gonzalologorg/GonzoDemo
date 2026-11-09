@@ -15,7 +15,11 @@ namespace GonzoDemo
                 damageInfo.Damage <= 0f)
                 return 0f;
 
-            float healthBefore = victim.GetStat(PlayerStats.StatType.Health);
+            PlayerController victimController = victim.GetComponentInParent<PlayerController>();
+            if (victimController == null)
+                return 0f;
+
+            int healthBefore = victimController.GetHealth();
             float resolvedDamage = damageInfo.Type switch
             {
                 DamageType.Physical => victim.CalculateDamage(damageInfo.Damage, false),
@@ -27,8 +31,9 @@ namespace GonzoDemo
             if (float.IsNaN(resolvedDamage) || float.IsInfinity(resolvedDamage) || resolvedDamage <= 0f)
                 return 0f;
 
-            victim.SetStat(PlayerStats.StatType.Health, healthBefore - resolvedDamage);
-            return healthBefore - victim.GetStat(PlayerStats.StatType.Health);
+            int damage = Mathf.Max(1, Mathf.CeilToInt(resolvedDamage));
+            victimController.AddHealth(-damage);
+            return healthBefore - victimController.GetHealth();
         }
 
         /// <summary>Routes projectile hits to destructible targets or player stats.</summary>

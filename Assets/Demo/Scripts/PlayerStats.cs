@@ -53,8 +53,8 @@ namespace GonzoDemo
             {
                 SetStat(StatType.MaxHealth, defaultStats != null ? defaultStats.health : 100f);
                 SetStat(StatType.MaxChakra, defaultStats != null ? defaultStats.chakra : 100f);
-                SetStat(StatType.Health, GetStat(StatType.MaxHealth));
-                SetStat(StatType.Chakra, GetStat(StatType.MaxChakra));
+                SetHealth(Mathf.RoundToInt(GetStat(StatType.MaxHealth)));
+                SetChakra(Mathf.RoundToInt(GetStat(StatType.MaxChakra)));
             }
             if (IsServer && defaultStats != null)
             {
@@ -130,31 +130,69 @@ namespace GonzoDemo
             return 0f;
         }
 
+        public int GetHealth() => Mathf.RoundToInt(GetStat(StatType.Health));
+
+        public void SetHealth(int amount)
+        {
+            if (!IsServer)
+                return;
+
+            int maximum = Mathf.Max(0, Mathf.FloorToInt(GetStat(StatType.MaxHealth)));
+            SetNetworkStat(StatType.Health, Mathf.Clamp(amount, 0, maximum));
+        }
+
+        public void AddHealth(int amount)
+        {
+            long target = (long)GetHealth() + amount;
+            int maximum = Mathf.Max(0, Mathf.FloorToInt(GetStat(StatType.MaxHealth)));
+            SetHealth((int)Math.Min(maximum, Math.Max(0L, target)));
+        }
+
+        public int GetChakra() => Mathf.RoundToInt(GetStat(StatType.Chakra));
+
+        public void SetChakra(int amount)
+        {
+            if (!IsServer)
+                return;
+
+            int maximum = Mathf.Max(0, Mathf.FloorToInt(GetStat(StatType.MaxChakra)));
+            SetNetworkStat(StatType.Chakra, Mathf.Clamp(amount, 0, maximum));
+        }
+
+        public void AddChakra(int amount)
+        {
+            long target = (long)GetChakra() + amount;
+            int maximum = Mathf.Max(0, Mathf.FloorToInt(GetStat(StatType.MaxChakra)));
+            SetChakra((int)Math.Min(maximum, Math.Max(0L, target)));
+        }
+
         public void SetStat(StatType type, float value)
         {
             if (!IsServer) return;
             if (float.IsNaN(value) || float.IsInfinity(value)) return;
+            if (type == StatType.Health || type == StatType.Chakra)
+            {
+                Debug.LogWarning($"Use SetHealth or SetChakra for {type}.", this);
+                return;
+            }
             if (type == StatType.MaxHealth || type == StatType.MaxChakra)
                 value = Mathf.Max(0f, value);
-            else if (type == StatType.Health)
-                value = Mathf.Clamp(value, 0f, GetStat(StatType.MaxHealth));
-            else if (type == StatType.Chakra)
-                value = Mathf.Clamp(value, 0f, GetStat(StatType.MaxChakra));
 
             SetNetworkStat(type, value);
-            if (type == StatType.MaxHealth && GetStat(StatType.Health) > value)
-                SetStat(StatType.Health, value);
-            else if (type == StatType.MaxChakra && GetStat(StatType.Chakra) > value)
-                SetStat(StatType.Chakra, value);
+            if (type == StatType.MaxHealth && GetHealth() > value)
+                SetHealth(Mathf.FloorToInt(value));
+            else if (type == StatType.MaxChakra && GetChakra() > value)
+                SetChakra(Mathf.FloorToInt(value));
         }
 
         public bool TryUseChakra(float amount)
         {
             if (!IsServer || !IsSpawned || float.IsNaN(amount) || float.IsInfinity(amount) || amount < 0f)
                 return false;
-            float chakra = GetStat(StatType.Chakra);
-            if (chakra < amount) return false;
-            if (amount > 0f) SetStat(StatType.Chakra, chakra - amount);
+            int chakraCost = Mathf.CeilToInt(amount);
+            int chakra = GetChakra();
+            if (chakra < chakraCost) return false;
+            if (chakraCost > 0) SetChakra(chakra - chakraCost);
             return true;
         }
 

@@ -21,6 +21,7 @@ public class HUDController : NetworkBehaviour
 	[SerializeField, Range(0f, 1f)] private float unselectedJutsuOpacity = 0.5f;
 	private UIDocument m_UIDocument;
 	private GonzoDemo.PlayerStats playerStats;
+	private GonzoDemo.PlayerController playerController;
 	private string displayedName = string.Empty;
 	private int displayedLevel = 1;
 	private int selectedJutsuSlot = -1;
@@ -48,6 +49,7 @@ public class HUDController : NetworkBehaviour
 	public override void OnNetworkSpawn()
 	{
 		playerStats = GetComponent<GonzoDemo.PlayerStats>();
+		playerController = GetComponent<GonzoDemo.PlayerController>();
 		if (playerStats != null)
 		{
 			playerStats.OnLevelChanged += UpdateLevel;
@@ -194,10 +196,10 @@ public class HUDController : NetworkBehaviour
 
 	private void UpdateResourceBars()
 	{
-		if (!IsOwner || playerStats == null) return;
-		UpdateHUDBar(uiHealthBar, uiHealthLabel, playerStats.GetStat(GonzoDemo.PlayerStats.StatType.Health),
+		if (!IsOwner || playerStats == null || playerController == null) return;
+		UpdateHUDBar(uiHealthBar, uiHealthLabel, playerController.GetHealth(),
 			playerStats.GetStat(GonzoDemo.PlayerStats.StatType.MaxHealth));
-		UpdateHUDBar(uiChakraBar, uiChakraLabel, playerStats.GetStat(GonzoDemo.PlayerStats.StatType.Chakra),
+		UpdateHUDBar(uiChakraBar, uiChakraLabel, playerController.GetChakra(),
 			playerStats.GetStat(GonzoDemo.PlayerStats.StatType.MaxChakra));
 	}
 

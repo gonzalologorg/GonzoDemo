@@ -29,14 +29,15 @@ namespace GonzoDemo
 		private static readonly Dictionary<string, JutsuDefinition> loadedJutsus = new Dictionary<string, JutsuDefinition>();
 		PlayerController controller;
 		HUDController hudController;
-		PlayerStats playerStats;
+		private int localHoldSlot = -1;
+		private int serverHoldSlot = -1;
+		private JutsuHoldSession serverHoldSession;
 
 		public override void OnNetworkSpawn()
 		{
 			//if (IsServer)
 
 			controller = GetComponent<PlayerController>();
-			playerStats = GetComponent<PlayerStats>();
 			hudController = GetComponent<HUDController>();
 			BuildRuntimeJutsus();
 			UpdateAimRotation();
@@ -47,6 +48,17 @@ namespace GonzoDemo
 			if (IsSpawned && IsOwner)
 				UpdateAimRotation();
 		}
+
+		private void Update()
+		{
+			if (IsServer && serverHoldSession != null && !serverHoldSession.IsComplete &&
+				NetworkManager.ServerTime.Time - serverHoldStartedAt >= serverHoldSession.MaxDuration)
+			{
+				serverHoldSession.Complete(NetworkManager.ServerTime.Time, false);
+			}
+		}
+
+		private double serverHoldStartedAt;
 
 		private void UpdateAimRotation()
 		{
@@ -200,7 +212,139 @@ namespace GonzoDemo
 			if (!Jutsus.TryGetValue(slot, out var jutsu) ||
 				jutsu.CooldownEndTime > NetworkManager.ServerTime.Time)
 				return;
+
+			JutsuContext context = new JutsuContext(jutsu.Definition, jutsu, this);
+			JutsuBehaviour holdBehaviour = GetHoldBehaviour(context, out float holdDuration);
+			if (holdBehaviour != null)
+			{
+				if (localHoldSlot >= 0)
+					return;
+
+				localHoldSlot = slot;
+				controller?.StartCasting(holdDuration, _ => FinishLocalHoldCast(slot));
+				RequestHoldCastServerRpc(slot);
+				return;
+			}
+
 			RequestCastServerRpc(slot);
+		}
+
+		public void StopLocalHoldCast()
+		{
+			if (!IsOwner || localHoldSlot < 0)
+				return;
+
+			controller?.StopCasting();
+		}
+
+		private void FinishLocalHoldCast(int slot)
+		{
+			if (!IsOwner || localHoldSlot != slot)
+				return;
+
+			localHoldSlot = -1;
+			StopHoldCastServerRpc(slot);
+		}
+
+		private JutsuBehaviour GetHoldBehaviour(JutsuContext context, out float duration)
+		{
+			duration = 0f;
+			if (context?.Definition?.Behaviours == null)
+				return null;
+
+			foreach (JutsuBehaviour behaviour in context.Definition.Behaviours)
+			{
+				if (behaviour == null)
+					continue;
+
+				float candidateDuration = behaviour.GetHoldDuration(context);
+				if (candidateDuration <= 0f)
+					continue;
+
+				duration = candidateDuration;
+				return behaviour;
+			}
+
+			return null;
+		}
+
+		[ServerRpc]
+		private void RequestHoldCastServerRpc(int slot, ServerRpcParams rpcParams = default)
+		{
+			bool accepted = false;
+			float duration = 0f;
+			JutsuBehaviour holdBehaviour = null;
+			JutsuContext context = null;
+			JutsuInstance jutsu = null;
+
+			if (serverHoldSession == null && Jutsus.TryGetValue(slot, out jutsu) &&
+				jutsu.CooldownEndTime <= NetworkManager.ServerTime.Time)
+			{
+				context = new JutsuContext(jutsu.Definition, jutsu, this);
+				foreach (JutsuBehaviour behaviour in jutsu.Definition.Behaviours ?? new List<JutsuBehaviour>())
+				{
+					if (behaviour != null && !behaviour.PreCast(context))
+					{
+						context = null;
+						break;
+					}
+				}
+
+				if (context != null)
+					holdBehaviour = GetHoldBehaviour(context, out duration);
+
+				float chakraCost = context != null ? context.GetChakraCost() : 0f;
+				if (holdBehaviour != null && duration > 0f &&
+					(chakraCost <= 0f || (controller != null && controller.TryUseChakra(chakraCost))))
+				{
+					jutsu.CooldownEndTime = NetworkManager.ServerTime.Time + context.GetCooldown();
+					ConfirmCooldownClientRpc(slot, jutsu.CooldownEndTime, new ClientRpcParams
+					{
+						Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } }
+					});
+					serverHoldSlot = slot;
+					serverHoldStartedAt = NetworkManager.ServerTime.Time;
+					serverHoldSession = new JutsuHoldSession(duration, serverHoldStartedAt);
+					StartCoroutine(RunHoldCast(holdBehaviour, context, serverHoldSession));
+					accepted = true;
+				}
+			}
+
+			HoldCastResultClientRpc(slot, accepted, new ClientRpcParams
+			{
+				Send = new ClientRpcSendParams { TargetClientIds = new[] { rpcParams.Receive.SenderClientId } }
+			});
+		}
+
+		[ServerRpc]
+		private void StopHoldCastServerRpc(int slot, ServerRpcParams rpcParams = default)
+		{
+			if (serverHoldSession == null || serverHoldSlot != slot ||
+				rpcParams.Receive.SenderClientId != OwnerClientId)
+				return;
+
+			serverHoldSession.Complete(NetworkManager.ServerTime.Time, true);
+		}
+
+		private IEnumerator RunHoldCast(JutsuBehaviour behaviour, JutsuContext context, JutsuHoldSession session)
+		{
+			yield return behaviour.OnServerHoldCast(context, session);
+			behaviour.OnServerHoldComplete(context, session.Power, session.WasReleased);
+			if (serverHoldSession == session)
+			{
+				serverHoldSession = null;
+				serverHoldSlot = -1;
+			}
+		}
+
+		[ClientRpc]
+		private void HoldCastResultClientRpc(int slot, bool accepted, ClientRpcParams rpcParams = default)
+		{
+			if (!IsOwner || localHoldSlot != slot || accepted)
+				return;
+
+			localHoldSlot = -1;
+			controller?.CancelCasting();
 		}
 
 		[ServerRpc]
@@ -222,7 +366,7 @@ namespace GonzoDemo
 			}
 
 			float chakraCost = context.GetChakraCost();
-			if (chakraCost > 0f && (playerStats == null || !playerStats.TryUseChakra(chakraCost)))
+			if (chakraCost > 0f && (controller == null || !controller.TryUseChakra(chakraCost)))
 				return;
 
 			// Reserve the cooldown before starting behaviours so another request cannot cast twice.

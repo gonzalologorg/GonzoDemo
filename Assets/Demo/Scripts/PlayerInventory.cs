@@ -229,6 +229,7 @@ namespace GonzoDemo
                 PlayerStats stats = GetComponent<PlayerStats>();
                 if (stats != null)
                 {
+                    PlayerController playerController = GetComponent<PlayerController>();
                     foreach (var stat in itemDefinition.Stats)
                     {
                         // Updates player stats based on the item being equipped or unequipped
@@ -240,7 +241,20 @@ namespace GonzoDemo
                                 ? currentStatValue + stat.Value
                                 : currentStatValue - stat.Value;
 
-                            stats.SetStat(statType, newStatValue);
+                            if (statType == PlayerStats.StatType.Health)
+                            {
+                                int amount = Mathf.RoundToInt(stat.Value) * (isEquip ? 1 : -1);
+                                playerController?.AddHealth(amount);
+                            }
+                            else if (statType == PlayerStats.StatType.Chakra)
+                            {
+                                int amount = Mathf.RoundToInt(stat.Value) * (isEquip ? 1 : -1);
+                                playerController?.AddChakra(amount);
+                            }
+                            else
+                            {
+                                stats.SetStat(statType, newStatValue);
+                            }
                         }
                     }
                 }

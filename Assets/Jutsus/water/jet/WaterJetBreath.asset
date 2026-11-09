@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d7698ebf0d3a3642b754f08a7bd124a, type: 3}
+  m_Name: WaterJetBreath
+  m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.JutsuDefinition
+  JutsuName: Water Jet Breath
+  Description: "Rayo de agua que inflige <color=#FF6666>@damage</color> de da\xF1o por segundo, cura <color=#66AAFF>@drain%</color> del da\xF1o realizado, alcanza <color=#66CCFF>@distance</color> m y dura hasta <color=#66CCFF>@duration</color> s"
+  JutsuIcon: {fileID: -7689859065710764565, guid: 8ebf032c83aa01744820c925c6f7d8d9, type: 3}
+  Stats:
+  - key: 1
+    value:
+    - key: damage
+      value: 10
+    - key: drain
+      value: 10
+    - key: distance
+      value: 5
+    - key: duration
+      value: 999
+  Cost: 00000000i
+  Cooldown: 00000000i
+  Behaviours:
+  - {fileID: 11400000, guid: 441c7d6a477a4e26b4eb9942c677bdd9, type: 2}

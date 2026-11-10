@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.JutsuDefinition
   JutsuName: Electric Chain
   Description: Bounces between nearby units, dealing <color=#FFDD55>@damage</color> damage on each unit once and reducing speed by <color=#66CCFF>@slow</color> for <color=#66CCFF>@duration</color> seconds. It can jump up to <color=#66CCFF>@jumps</color> times.
-  JutsuIcon: {fileID: -5358167244182702320, guid: b232d368ee9f54945bb3e245ce3c0ff2, type: 3}
+  JutsuIcon: {fileID: 21300000, guid: b232d368ee9f54945bb3e245ce3c0ff2, type: 3}
   Stats:
   - key: 1
     value:

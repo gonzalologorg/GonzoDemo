@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b653adb89f3d494bb5389d84e8605f39, type: 3}
   m_Name: ElectricChainBehaviour
   m_EditorClassIdentifier: Assembly-CSharp::ElectricChainBehaviour
-  chainPrefab: {fileID: 100100000, guid: c839aa72b0884d02a8f51bf8fd32982b, type: 3}
+  chainPrefab: {fileID: 4067721927251119600, guid: c839aa72b0884d02a8f51bf8fd32982b, type: 3}

@@ -1,3 +1,4 @@
+using GonzoDemo.AI;
 using UnityEngine;
 using Unity.Netcode;
 using GonzoDemo.Combat;
@@ -33,7 +34,9 @@ namespace GonzoDemo
 
             int damage = Mathf.Max(1, Mathf.CeilToInt(resolvedDamage));
             victimController.AddHealth(-damage);
-            return healthBefore - victimController.GetHealth();
+            float removed = healthBefore - victimController.GetHealth();
+            MinionCombat.ReportDamage(victim.gameObject, damageInfo.Attacker, removed);
+            return removed;
         }
 
         /// <summary>Routes projectile hits to destructible targets or player stats.</summary>
@@ -55,6 +58,14 @@ namespace GonzoDemo
                 NetworkObject attackerNetworkObject = attacker != null
                     ? attacker.GetComponentInParent<NetworkObject>() ?? attacker.GetComponentInChildren<NetworkObject>()
                     : null;
+
+                Minion minion = hitCollider.GetComponentInParent<Minion>();
+                if (minion != null)
+                {
+                    minion.ReceiveDamage(new DamageInfo(projectile.Damage, attacker, projectile.gameObject,
+                        damageType, impactForce, hitPosition, hitCollider));
+                    return;
+                }
 
                 IHittable hittable = hitCollider.GetComponentInParent<IHittable>();
                 if (hittable != null)

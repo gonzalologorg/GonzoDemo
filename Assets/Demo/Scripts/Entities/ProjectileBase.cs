@@ -1,3 +1,4 @@
+using GonzoDemo.AI;
 using System;
 using Unity.Netcode;
 using UnityEditor.Rendering;
@@ -100,6 +101,7 @@ namespace GonzoDemo
         private void OnTriggerEnter(Collider other)
         {
             if (!IsServer || consumed) return;
+            if (other.GetComponent<MinionSensorRelay>() != null) return;
 
             NetworkObject target = other.GetComponentInParent<NetworkObject>();
             if (target != null && target.NetworkObjectId == casterObjectId.Value)

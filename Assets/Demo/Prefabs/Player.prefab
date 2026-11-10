@@ -643,6 +643,9 @@ MonoBehaviour:
   - slot: 2
     definition: {fileID: 11400000, guid: 325a1c26635d42d4a03178ce4bc84235, type: 2}
     level: 1
+  - slot: 3
+    definition: {fileID: 11400000, guid: 3f5d3e5b34464a6fa23daf80642c6143, type: 2}
+    level: 1
 --- !u!1 &5666575444993934560
 GameObject:
   m_ObjectHideFlags: 0

@@ -9,4 +9,19 @@ public class RoomObject : MonoBehaviour
     [FormerlySerializedAs("ClearingIndex")]
     [Tooltip("Position of this room in the DungeonManager route. -1 means it is not selected.")]
     public int RoomIndex = -1;
+
+    [Tooltip("Encounter controller for this room. Can be on a sibling under the room container.")]
+    public DungeonSpawnManager SpawnManager;
+
+    public DungeonSpawnManager GetSpawnManager()
+    {
+        if (SpawnManager != null) return SpawnManager;
+        var result = GetComponentInChildren<DungeonSpawnManager>(true);
+        if (result != null) return result;
+        // Existing rooms store RoomObject and spawners as siblings under one room container.
+        var parent = transform.parent;
+        if (parent != null && parent.GetComponentsInChildren<RoomObject>(true).Length == 1)
+            return parent.GetComponentInChildren<DungeonSpawnManager>(true);
+        return null;
+    }
 }

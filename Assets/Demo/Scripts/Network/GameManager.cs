@@ -49,6 +49,16 @@ namespace GonzoDemo
 		[Tooltip("List of Transforms to use as spawn points.")]
 		[SerializeField] private List<Transform> spawnPoints;
 
+		/// <summary>Replaces the spawn locations used for initial spawning and respawning.</summary>
+		public void SetSpawnPoints(IEnumerable<Transform> points)
+		{
+			var replacement = new List<Transform>();
+			if (points != null)
+				foreach (var point in points)
+					if (point != null) replacement.Add(point);
+			spawnPoints = replacement;
+		}
+
 		private SessionObserver m_SessionObserver;
 		private const string k_PlayerNameKey = "_player_name";
 

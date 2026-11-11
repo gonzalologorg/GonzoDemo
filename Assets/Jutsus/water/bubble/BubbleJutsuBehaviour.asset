@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f1a4d3cbdc14666a58fb933c52cf64e, type: 3}
   m_Name: BubbleJutsuBehaviour
   m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.BubbleJutsuBehaviour
-  BubblePrefab: {fileID: 100100000, guid: 7c0200a3eb322964880a74d047f5258d, type: 3}
+  BubblePrefab: {fileID: 2544154722566578172, guid: 7c0200a3eb322964880a74d047f5258d, type: 3}
   TargetRange: 15
   MissSpawnDistance: 4

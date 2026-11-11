@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class DungeonManager : MonoBehaviour
+[RequireComponent(typeof(NetworkObject))]
+public class DungeonManager : NetworkBehaviour
 {
     [Min(1)]
     [Tooltip("Maximum number of rooms in the route, including the main room.")]
@@ -18,23 +20,125 @@ public class DungeonManager : MonoBehaviour
 
     public IReadOnlyList<RoomObject> SelectedRooms => selectedRooms;
     public IReadOnlyList<DoorObject> SelectedDoors => selectedDoors;
-    public int ClearingIndex = 0;
+    [UnityEngine.Serialization.FormerlySerializedAs("ClearingIndex")]
+    [SerializeField, Min(0)] private int previewClearingIndex;
+    [Min(1)] public int RewardRoomInterval = 3;
+    private readonly NetworkVariable<int> clearance = new NetworkVariable<int>(0);
+    private readonly NetworkVariable<int> encounterRoom = new NetworkVariable<int>(-1);
+    private readonly NetworkVariable<int> rewardInterval = new NetworkVariable<int>(3);
+    private NetworkList<int> route = new NetworkList<int>();
+    private readonly List<RoomObject> roomCatalog = new List<RoomObject>();
+    private bool presentationDirty;
+    public int ClearingIndex => IsSpawned ? clearance.Value : previewClearingIndex;
+    public int ActiveEncounterIndex => IsSpawned ? encounterRoom.Value : -1;
+    public bool HasServerAuthority => IsSpawned && IsServer;
 
     private static readonly Color UnselectedDoorColor = Color.red;
     private static readonly Color CurrentDoorColor = Color.blue;
     private static readonly Color UpcomingDoorColor = Color.green;
     private static readonly Color ClearedDoorColor = Color.yellow;
 
-    private void Start()
+    public override void OnNetworkSpawn()
     {
-        RebuildRoute();
+        BuildCatalog();
+        route.OnListChanged += RouteChanged;
+        clearance.OnValueChanged += StateChanged;
+        encounterRoom.OnValueChanged += StateChanged;
+        rewardInterval.OnValueChanged += StateChanged;
+        if (IsServer) RebuildRoute();
+        else ApplyReplicatedRoute();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        route.OnListChanged -= RouteChanged;
+        clearance.OnValueChanged -= StateChanged;
+        encounterRoom.OnValueChanged -= StateChanged;
+        rewardInterval.OnValueChanged -= StateChanged;
+        foreach (RoomObject room in roomCatalog)
+            if (room != null)
+                room.GetSpawnManager()?.ResetEncounter();
+    }
+
+    private void BuildCatalog()
+    {
+        roomCatalog.Clear();
+        foreach (var room in FindObjectsByType<RoomObject>(FindObjectsInactive.Include))
+            if (room.gameObject.scene == gameObject.scene) roomCatalog.Add(room);
+        // Scene objects have the same hierarchy on all peers, unlike instance IDs.
+        roomCatalog.Sort((a, b) => string.CompareOrdinal(SceneKey(a.transform), SceneKey(b.transform)));
+    }
+
+    private static string SceneKey(Transform item)
+    {
+        string key = item.GetSiblingIndex().ToString("D6");
+        while (item.parent != null) { item = item.parent; key = item.GetSiblingIndex().ToString("D6") + "/" + key; }
+        return key;
+    }
+
+    private void RouteChanged(NetworkListEvent<int> change) => presentationDirty = true;
+    private void StateChanged(int previous, int current) => presentationDirty = true;
+    private void LateUpdate()
+    {
+        if (!IsSpawned || !presentationDirty) return;
+        presentationDirty = false;
+        if (!IsServer) ApplyReplicatedRoute();
+        else RefreshDoorStates();
+    }
+
+    private void ApplyReplicatedRoute()
+    {
+        selectedRooms.Clear();
+        foreach (int index in route)
+            if (index >= 0 && index < roomCatalog.Count) selectedRooms.Add(roomCatalog[index]);
+        MainRoom = selectedRooms.Count > 0 ? selectedRooms[0] : null;
+        UpdatePlayerSpawnPoints();
+        DeactivateRoomsOutsideRoute(roomCatalog);
+        RefreshDoorStates();
+    }
+
+    private void PublishRoute()
+    {
+        if (!HasServerAuthority) return;
+        route.Clear();
+        foreach (RoomObject room in selectedRooms) route.Add(roomCatalog.IndexOf(room));
+    }
+
+    public bool TryBeginEncounter(DungeonSpawnManager spawner)
+    {
+        if (!HasServerAuthority || spawner == null || ActiveEncounterIndex >= 0 ||
+            spawner.Room == null || spawner.Room.RoomIndex != ClearingIndex + 1 ||
+            !selectedRooms.Contains(spawner.Room)) return false;
+        encounterRoom.Value = spawner.Room.RoomIndex;
+        RefreshDoorStates();
+        return true;
+    }
+
+    public void CompleteEncounter(DungeonSpawnManager spawner)
+    {
+        if (!HasServerAuthority || spawner == null || spawner.Room == null ||
+            ActiveEncounterIndex != spawner.Room.RoomIndex) return;
+        clearance.Value = ActiveEncounterIndex;
+        encounterRoom.Value = -1;
+        RefreshDoorStates();
+    }
+
+    public void CancelEncounter(DungeonSpawnManager spawner)
+    {
+        if (!HasServerAuthority || spawner == null || spawner.Room == null || ActiveEncounterIndex != spawner.Room.RoomIndex) return;
+        encounterRoom.Value = -1;
+        RefreshDoorStates();
     }
 
     [ContextMenu("Rebuild Route")]
     public void RebuildRoute()
     {
-        RoomObject[] sceneRooms = FindObjectsOfType<RoomObject>(true);
-        List<RoomObject> rooms = new List<RoomObject>(sceneRooms);
+        if (Application.isPlaying && !HasServerAuthority) return;
+        if (Application.isPlaying && ActiveEncounterIndex >= 0) return;
+        if (!Application.isPlaying) BuildCatalog();
+        foreach (var room in roomCatalog) room.GetSpawnManager()?.ResetEncounter();
+        if (HasServerAuthority) rewardInterval.Value = Mathf.Max(1, RewardRoomInterval);
+        List<RoomObject> rooms = new List<RoomObject>(roomCatalog);
         Dictionary<RoomObject, List<RoomObject>> adjacency = BuildAdjacency(rooms);
 
         selectedRooms.Clear();
@@ -42,19 +146,52 @@ public class DungeonManager : MonoBehaviour
         if (rooms.Count == 0 || RoomCount < 1)
         {
             MainRoom = null;
-            ClearingIndex = 0;
+            UpdatePlayerSpawnPoints();
+            if (IsSpawned) clearance.Value = 0; else previewClearingIndex = 0;
+            PublishRoute();
             RefreshDoorStates();
             return;
         }
 
         MainRoom = rooms[Random.Range(0, rooms.Count)];
-        ClearingIndex = 0;
+        if (IsSpawned) clearance.Value = 0; else previewClearingIndex = 0;
 
         List<RoomObject> currentPath = new List<RoomObject> { MainRoom };
         HashSet<RoomObject> visited = new HashSet<RoomObject> { MainRoom };
         SearchLongestRoute(MainRoom, adjacency, currentPath, visited);
+        UpdatePlayerSpawnPoints();
+        PublishRoute();
         DeactivateRoomsOutsideRoute(rooms);
         RefreshDoorStates();
+    }
+
+    private void UpdatePlayerSpawnPoints()
+    {
+        Transform container = null;
+        if (MainRoom != null)
+        {
+            container = MainRoom.transform.Find("spawners");
+            // Existing scene rooms keep RoomObject and spawners as siblings.
+            if (container == null && MainRoom.transform.parent != null &&
+                MainRoom.transform.parent.GetComponentsInChildren<RoomObject>(true).Length == 1)
+                container = MainRoom.transform.parent.Find("spawners");
+        }
+
+        var points = new List<Transform>();
+        if (container != null)
+            foreach (Transform child in container) points.Add(child);
+
+        if (MainRoom != null && points.Count == 0)
+            Debug.LogWarning($"{MainRoom.name}: the main room needs a spawners child with spawn markers.", MainRoom);
+
+        // Both GameManager variants exist in the project. Clients only apply the
+        // server-selected main room; they never generate or select a separate route.
+        var demoManager = GonzoDemo.GameManager.Instance != null
+            ? GonzoDemo.GameManager.Instance : FindFirstObjectByType<GonzoDemo.GameManager>(FindObjectsInactive.Include);
+        var coreManager = Blocks.Gameplay.Core.GameManager.Instance != null
+            ? Blocks.Gameplay.Core.GameManager.Instance : FindFirstObjectByType<Blocks.Gameplay.Core.GameManager>(FindObjectsInactive.Include);
+        if (demoManager != null) demoManager.SetSpawnPoints(points);
+        if (coreManager != null) coreManager.SetSpawnPoints(points);
     }
 
     private void DeactivateRoomsOutsideRoute(List<RoomObject> rooms)
@@ -81,16 +218,19 @@ public class DungeonManager : MonoBehaviour
 
         foreach (KeyValuePair<GameObject, bool> parent in parentAvailability)
         {
-            if (parent.Key != null)
+            // Keep network scene objects (including this manager) alive for late joins.
+            if (parent.Key != null && parent.Key.GetComponentInChildren<NetworkObject>(true) == null)
                 parent.Key.SetActive(parent.Value);
         }
     }
 
     public void SetClearingIndex(int index)
     {
-        ClearingIndex = selectedRooms.Count == 0
+        if (Application.isPlaying && (!HasServerAuthority || ActiveEncounterIndex >= 0)) return;
+        int value = selectedRooms.Count == 0
             ? 0
             : Mathf.Clamp(index, 0, selectedRooms.Count - 1);
+        if (IsSpawned) clearance.Value = value; else previewClearingIndex = value;
         RefreshDoorStates();
     }
 
@@ -106,7 +246,9 @@ public class DungeonManager : MonoBehaviour
 
     public void RefreshDoorStates()
     {
-        RoomObject[] allRooms = FindObjectsOfType<RoomObject>(true);
+        if (Application.isPlaying && !IsSpawned) return;
+        if (!Application.isPlaying) BuildCatalog();
+        RoomObject[] allRooms = roomCatalog.ToArray();
         foreach (RoomObject room in allRooms)
         {
             if (room != null)
@@ -123,6 +265,7 @@ public class DungeonManager : MonoBehaviour
                 continue;
 
             room.RoomIndex = i;
+            room.GetSpawnManager()?.Bind(this, room, i > 0 && i % Mathf.Max(1, IsSpawned ? rewardInterval.Value : RewardRoomInterval) == 0);
             if (room.Doors == null)
                 continue;
 
@@ -176,11 +319,22 @@ public class DungeonManager : MonoBehaviour
             }
         }
 
-        DoorObject[] allDoors = FindObjectsOfType<DoorObject>(true);
+        DoorObject[] allDoors = FindObjectsByType<DoorObject>(FindObjectsInactive.Include);
         foreach (DoorObject door in allDoors)
         {
-            if (door == null)
+            if (door == null || door.gameObject.scene != gameObject.scene)
                 continue;
+
+            bool routeDoor = selectedDoorIndexes.TryGetValue(door, out int doorIndex) && !doorsToUnselectedRooms.Contains(door);
+            if (routeDoor)
+            {
+                var destinations = new HashSet<RoomObject>();
+                AddDoorDestinations(door, allRooms, destinations);
+                foreach (var destination in destinations)
+                    if (destination != null && destination.RoomIndex >= 0) doorIndex = Mathf.Min(doorIndex, destination.RoomIndex);
+            }
+            // Route edges ahead of the next room stay closed; a live encounter seals the dungeon.
+            door.SetLocked(!routeDoor || ActiveEncounterIndex >= 0 || doorIndex > ClearingIndex);
 
             if (!selectedDoorIndexes.TryGetValue(door, out int roomIndex) ||
                 doorsToUnselectedRooms.Contains(door))

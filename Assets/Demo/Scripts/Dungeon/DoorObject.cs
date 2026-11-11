@@ -15,6 +15,22 @@ public class DoorObject : MonoBehaviour
     [Tooltip("Matching door objects on the connected room branches.")]
     public List<DoorObject> ConnectedDoors = new List<DoorObject>();
 
+    [Tooltip("Solid colliders that block passage while the door is locked. Defaults to child non-trigger colliders.")]
+    [SerializeField] private Collider[] blockingColliders;
+    [SerializeField] private Animator doorAnimator;
+    [SerializeField] private string lockedParameter = "Locked";
+    public bool IsLocked { get; private set; }
+
+    // Called from the replicated dungeon state on every peer. No gameplay events run here.
+    public void SetLocked(bool locked)
+    {
+        IsLocked = locked;
+        if (blockingColliders == null || blockingColliders.Length == 0)
+            blockingColliders = System.Array.FindAll(GetComponentsInChildren<Collider>(true), item => !item.isTrigger);
+        foreach (var blocker in blockingColliders) if (blocker != null) blocker.enabled = locked;
+        if (doorAnimator != null && !string.IsNullOrEmpty(lockedParameter)) doorAnimator.SetBool(lockedParameter, locked);
+    }
+
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
     private static readonly int ColorId = Shader.PropertyToID("_Color");
 

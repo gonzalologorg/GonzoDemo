@@ -7,6 +7,12 @@ public class DungeonManagerEditor : Editor
     public override void OnInspectorGUI()
     {
         DungeonManager manager = (DungeonManager)target;
+        if (manager.GetComponent<Unity.Netcode.NetworkObject>() == null)
+        {
+            EditorGUILayout.HelpBox("This existing scene object needs a NetworkObject to run on the server and replicate dungeon state.", MessageType.Error);
+            if (!Application.isPlaying && GUILayout.Button("Add required NetworkObject"))
+                Undo.AddComponent<Unity.Netcode.NetworkObject>(manager.gameObject);
+        }
         bool changed = DrawDefaultInspector();
         if (changed)
         {
@@ -16,6 +22,7 @@ public class DungeonManagerEditor : Editor
         }
 
         EditorGUILayout.Space();
+        using (new EditorGUI.DisabledScope(Application.isPlaying && (!manager.HasServerAuthority || manager.ActiveEncounterIndex >= 0)))
         if (GUILayout.Button("Generate Random Route"))
         {
             Undo.RecordObject(manager, "Rebuild Dungeon Route");
@@ -31,7 +38,7 @@ public class DungeonManagerEditor : Editor
                 "Runtime Clearing Index",
                 manager.ClearingIndex.ToString());
 
-            using (new EditorGUI.DisabledScope(manager.SelectedRooms.Count == 0))
+            using (new EditorGUI.DisabledScope(manager.SelectedRooms.Count == 0 || !manager.HasServerAuthority || manager.ActiveEncounterIndex >= 0))
             {
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Previous Room"))

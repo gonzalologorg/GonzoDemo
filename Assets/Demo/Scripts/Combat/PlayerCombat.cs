@@ -24,6 +24,7 @@ namespace GonzoDemo
             0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private readonly HashSet<ulong> hitTargets = new HashSet<ulong>();
         private PlayerController playerController;
+        private PlayerStats playerStats;
         private int animationIndex;
         private float nextLocalAttackTime;
         private float nextServerAttackTime;
@@ -31,6 +32,7 @@ namespace GonzoDemo
         private int pendingEquipmentIndex = -1;
         private Vector3 pendingAimDirection;
         private float pendingMeleeExpiresAt;
+        private static readonly int attackPlaybackSpeed = Animator.StringToHash("AttackPlaybackSpeed");
 
         public IReadOnlyList<CombatEquipment> Loadout => loadout;
         public int SelectedEquipmentIndex => selectedLoadoutIndex.Value;
@@ -39,6 +41,7 @@ namespace GonzoDemo
         private void Awake()
         {
             playerController = GetComponent<PlayerController>();
+            playerStats = GetComponent<PlayerStats>();
             if (animator == null)
                 animator = GetComponentInChildren<Animator>(true);
             if (attackOrigin == null && playerController != null)
@@ -75,9 +78,11 @@ namespace GonzoDemo
             if (equipment == null)
                 return;
 
-            nextLocalAttackTime = Time.time + Mathf.Max(0.05f, equipment.AttackCooldown);
+            float attackInterval = GetAttackInterval(equipment);
+            if (float.IsInfinity(attackInterval)) return;
+            nextLocalAttackTime = Time.time + attackInterval;
             Vector3 aimDirection = GetLocalAimDirection();
-            PlayAttackAnimation(equipment);
+            PlayAttackAnimation(equipment, attackInterval);
 
             if (IsServer)
                 BeginAttackOnServer(equipmentIndex, aimDirection, OwnerClientId);
@@ -143,7 +148,9 @@ namespace GonzoDemo
             if (equipment == null || (playerController != null && playerController.GetHealth() <= 0))
                 return;
 
-            nextServerAttackTime = Time.time + Mathf.Max(0.05f, equipment.AttackCooldown);
+            float attackInterval = GetAttackInterval(equipment);
+            if (float.IsInfinity(attackInterval)) return;
+            nextServerAttackTime = Time.time + attackInterval;
             pendingAimDirection = IsFinite(aimDirection) && aimDirection.sqrMagnitude > 0.001f
                 ? aimDirection.normalized
                 : transform.forward;
@@ -151,12 +158,27 @@ namespace GonzoDemo
             if (equipment.Type == CombatEquipmentType.Melee)
             {
                 pendingEquipmentIndex = equipmentIndex;
-                pendingMeleeExpiresAt = Time.time + Mathf.Max(1.5f, equipment.AttackCooldown + 1f);
+                pendingMeleeExpiresAt = Time.time + Mathf.Max(1.5f, attackInterval + 1f);
                 meleeHitPending = true;
                 return;
             }
 
             SpawnRangedProjectile(equipment, pendingAimDirection);
+        }
+
+        private float GetAttackInterval(CombatEquipment equipment)
+        {
+            float attacksPerSecond = playerStats != null ? playerStats.GetStat(PlayerStats.StatType.AttackSpeed) : 1f;
+            return CalculateAttackInterval(attacksPerSecond, equipment.AttackCooldown);
+        }
+
+        public static float CalculateAttackInterval(float attacksPerSecond, float cooldownMultiplier)
+        {
+            if (attacksPerSecond <= 0f || float.IsNaN(attacksPerSecond) || float.IsInfinity(attacksPerSecond) ||
+                float.IsNaN(cooldownMultiplier) || float.IsInfinity(cooldownMultiplier))
+                return float.PositiveInfinity;
+
+            return Mathf.Max(0.05f, cooldownMultiplier) / attacksPerSecond;
         }
 
         private void ResolvePendingMeleeHit(ulong senderClientId)
@@ -262,7 +284,13 @@ namespace GonzoDemo
             return null;
         }
 
-        private void PlayAttackAnimation(CombatEquipment equipment)
+        public static float CalculateAttackPlaybackSpeed(float clipLength, float attackInterval)
+        {
+            // Normalize the entire clip to the attack interval, regardless of its authored duration.
+            return clipLength > 0f && attackInterval > 0f ? clipLength / attackInterval : 1f;
+        }
+
+        private void PlayAttackAnimation(CombatEquipment equipment, float attackInterval)
         {
             if (animator == null)
                 return;
@@ -286,6 +314,7 @@ namespace GonzoDemo
                     }
 
                     animationIndex = index + 1;
+                    SetAttackPlaybackSpeed(CalculateAttackPlaybackSpeed(clip.length, attackInterval));
                     animator.CrossFade(stateHash, 0.05f, 0, 0f);
                     return;
                 }
@@ -296,7 +325,20 @@ namespace GonzoDemo
             {
                 if (parameter.nameHash == attackTrigger && parameter.type == AnimatorControllerParameterType.Trigger)
                 {
+                    SetAttackPlaybackSpeed(CalculateAttackPlaybackSpeed(1f, attackInterval));
                     animator.SetTrigger(attackTrigger);
+                    return;
+                }
+            }
+        }
+
+        private void SetAttackPlaybackSpeed(float speed)
+        {
+            foreach (AnimatorControllerParameter parameter in animator.parameters)
+            {
+                if (parameter.nameHash == attackPlaybackSpeed && parameter.type == AnimatorControllerParameterType.Float)
+                {
+                    animator.SetFloat(attackPlaybackSpeed, speed);
                     return;
                 }
             }

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb68efe62d0e8fa4cb31a54b415b5037, type: 3}
   m_Name: fists
   m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.CombatEquipment
-  Damage: 10
+  Damage: 50
   Type: 0
   Animations:
   - {fileID: 5327579647636344352, guid: d193a764e528253418a9c8161269688c, type: 3}

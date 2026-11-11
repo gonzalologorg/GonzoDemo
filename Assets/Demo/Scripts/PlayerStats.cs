@@ -18,7 +18,8 @@ namespace GonzoDemo
             AbilityDamage,
             MaxHealth,
             Chakra,
-            MaxChakra
+            MaxChakra,
+            AttackSpeed
         }
 
         public DefaultStats defaultStats;
@@ -53,6 +54,7 @@ namespace GonzoDemo
             {
                 SetStat(StatType.MaxHealth, defaultStats != null ? defaultStats.health : 100f);
                 SetStat(StatType.MaxChakra, defaultStats != null ? defaultStats.chakra : 100f);
+                SetStat(StatType.AttackSpeed, defaultStats != null ? defaultStats.attackSpeed : 1f);
                 SetHealth(Mathf.RoundToInt(GetStat(StatType.MaxHealth)));
                 SetChakra(Mathf.RoundToInt(GetStat(StatType.MaxChakra)));
             }
@@ -175,7 +177,7 @@ namespace GonzoDemo
                 Debug.LogWarning($"Use SetHealth or SetChakra for {type}.", this);
                 return;
             }
-            if (type == StatType.MaxHealth || type == StatType.MaxChakra)
+            if (type == StatType.MaxHealth || type == StatType.MaxChakra || type == StatType.AttackSpeed)
                 value = Mathf.Max(0f, value);
 
             SetNetworkStat(type, value);

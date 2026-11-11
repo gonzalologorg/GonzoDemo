@@ -20,7 +20,8 @@ namespace GonzoDemo
         [Min(0.1f)] public float AttackRange = 1.5f;
         [Tooltip("Zero hits one target. A positive value enables area hit registration; for ranged equipment it is the impact radius.")]
         [Min(0f)] public float Radius;
-        [Min(0.05f)] public float AttackCooldown = 0.5f;
+        [Tooltip("Multiplies the base attack interval (1 / player AttackSpeed). 1.25 makes attacks take 25% longer.")]
+        [Min(0.05f)] public float AttackCooldown = 1f;
         [Header("Range equipment")]
         public CombatHomingProjectile ProjectilePrefab;
         [Min(0.1f)] public float ProjectileSpeed = 15f;

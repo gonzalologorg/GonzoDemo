@@ -12,9 +12,11 @@ public class DungeonSpawnManagerEditor : Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("isRewardRoom"));
         serializedObject.ApplyModifiedProperties();
         var manager = (DungeonSpawnManager)target;
-        EditorGUILayout.HelpBox("Waves: one entry per wave. PoolIndex selects a weighted pool (starting at 0). " +
+        EditorGUILayout.HelpBox("Waves: one entry per wave. DungeonManager selects a compatible SpawnList assigned to this map, " +
+            "or loads from Resources/Spawners when the map list is empty. " +
+            "If no SpawnList matches, PoolIndex selects a weighted per-room pool (starting at 0). " +
             "Difficulty below 1 weakens enemies. DungeonManager marks rooms 3, 6, 9... as reward rooms. " +
-            "All encounter events run only on the server.", MessageType.Info);
+            "A custom enemy or reward SpawnList can be assigned per room. All encounter events run only on the server.", MessageType.Info);
         if (Application.isPlaying)
         {
             EditorGUILayout.LabelField("Running (server)", manager.IsRunning.ToString());

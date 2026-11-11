@@ -36,6 +36,7 @@ namespace GonzoDemo
 
         PlayerControls controls;
         JutsuController controller;
+        PlayerCombat playerCombat;
         HUDController hudController;
         PlayerStats playerStats;
         Blocks.Gameplay.Core.CoreMovement coreMovement;
@@ -55,6 +56,7 @@ namespace GonzoDemo
         {
             controls = new PlayerControls();
 			controller = GetComponent<JutsuController>();
+			playerCombat = GetComponent<PlayerCombat>();
 			hudController = GetComponent<HUDController>();
 			playerStats = GetComponent<PlayerStats>();
 			coreMovement = GetComponent<Blocks.Gameplay.Core.CoreMovement>();
@@ -216,6 +218,8 @@ namespace GonzoDemo
 
 		public void OnAttack(InputAction.CallbackContext context)
         {
+            if (context.performed && !IsCastingJutsu)
+                playerCombat?.Attack();
         }
 
 		public void OnCastJutsu(InputAction.CallbackContext context)

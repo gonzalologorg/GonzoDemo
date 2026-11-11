@@ -11,7 +11,7 @@ namespace GonzoDemo
 	/// It inherits from <see cref="NetworkAnimator"/> to automatically synchronize animation states across the network.
 	/// </summary>
 	[RequireComponent(typeof(AudioSource))]
-	public class CoreAnimator : NetworkAnimator
+	public class PlayerAnimator : NetworkAnimator
 	{
 		/// <summary>
 		/// The owning client drives its own cosmetic animation state, which NetworkAnimator
@@ -65,6 +65,12 @@ namespace GonzoDemo
 		/// <param name="animationEvent">Data from the animation event.</param>
 		public void OnLand(AnimationEvent animationEvent)
 		{
+		}
+
+		/// <summary>Forwards a melee clip's contact event to the player's combat component.</summary>
+		public void OnAttackAnim(AnimationEvent animationEvent)
+		{
+			GetComponentInParent<PlayerCombat>()?.OnAttackAnim();
 		}
 
 		#region Private Methods

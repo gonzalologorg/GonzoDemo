@@ -27,6 +27,7 @@ public class DungeonSpawnManager : MonoBehaviour
     [Serializable]
     public class Wave
     {
+        [Tooltip("Used only when no compatible global or custom SpawnList asset is selected.")]
         [Min(0)] public int PoolIndex;
         [Min(1)] public int Count = 3;
         [Min(0)] public float SpawnInterval = 0.5f;
@@ -55,14 +56,19 @@ public class DungeonSpawnManager : MonoBehaviour
     [SerializeField] private Transform spawners;
     [Tooltip("Room-volume triggers on this object or its children. Auto-detected if empty.")]
     [SerializeField] private Collider[] roomTriggers;
-    [SerializeField, Min(0.1f)] private float navMeshSampleRadius = 2;
+    [SerializeField, Min(0.1f)] private float navMeshSampleRadius = 10;
     [Header("Encounters")]
+    [Tooltip("Optional enemy list override. If empty, DungeonManager selects one of this map's lists by party difficulty.")]
+    [SerializeField] private SpawnListAsset customEnemySpawnList;
+    [Tooltip("Optional reward list override. If empty, DungeonManager selects one of this map's lists by party difficulty.")]
+    [SerializeField] private SpawnListAsset customRewardSpawnList;
+    [Tooltip("Legacy per-room enemy pools used only when no matching SpawnList asset is available.")]
     public List<SpawnPool> Pools = new List<SpawnPool>();
     public List<Wave> Waves = new List<Wave> { new Wave() };
     public DifficultySettings Difficulty = new DifficultySettings();
     [Header("Reward room (assigned by DungeonManager)")]
     [SerializeField] private bool isRewardRoom;
-    [Tooltip("One randomly selected network prefab is spawned instead of waves.")]
+    [Tooltip("Legacy per-room rewards used only when no matching SpawnList asset is available.")]
     public List<NetworkObject> RewardPrefabs = new List<NetworkObject>();
     [Header("Server events")]
     public UnityEvent OnEncounterStarted = new UnityEvent();
@@ -83,6 +89,9 @@ public class DungeonSpawnManager : MonoBehaviour
     private readonly List<Minion> spawned = new List<Minion>();
     private readonly List<Vector3> spawnPositions = new List<Vector3>();
     private readonly List<DungeonRoomTrigger> triggers = new List<DungeonRoomTrigger>();
+    private SpawnListAsset activeSpawnList;
+    private List<SpawnListAsset.Entry> activeSpawnEntries;
+    private int encounterDifficulty = 1;
     private Coroutine encounter;
     private bool completed;
     private float retryAt;
@@ -186,6 +195,9 @@ public class DungeonSpawnManager : MonoBehaviour
     private bool ValidateEncounter(out string error)
     {
         error = null;
+        activeSpawnList = null;
+        activeSpawnEntries = null;
+        encounterDifficulty = GetPartyDifficulty();
         spawnPositions.Clear();
         if (spawners == null || spawners.childCount == 0) { error = "Configure children under spawners."; return false; }
         foreach (Transform marker in spawners)
@@ -196,17 +208,31 @@ public class DungeonSpawnManager : MonoBehaviour
         if (spawnPositions.Count == 0) { error = "No spawn marker lies on a NavMesh."; return false; }
         if (isRewardRoom)
         {
-            if (RewardPrefabs == null || RewardPrefabs.Count == 0 || RewardPrefabs.Exists(prefab => prefab == null))
-                error = "Configure valid network reward prefabs.";
+            if (TryResolveSpawnList(true, customRewardSpawnList, out activeSpawnList, out activeSpawnEntries))
+            {
+                if (activeSpawnEntries.Exists(entry => entry.Prefab.GetComponent<NetworkObject>() == null ||
+                    !dungeon.NetworkManager.NetworkConfig.Prefabs.Contains(entry.Prefab)))
+                    error = "Register every reward prefab in NetworkPrefabs and include a NetworkObject.";
+            }
+            else if (customRewardSpawnList != null)
+                error = "The custom reward SpawnList has no valid network reward prefabs with positive weights.";
+            else if (RewardPrefabs == null || RewardPrefabs.Count == 0 || RewardPrefabs.Exists(prefab => prefab == null))
+                error = "Configure a reward SpawnList asset or legacy reward prefabs.";
             else if (RewardPrefabs.Exists(prefab => !dungeon.NetworkManager.NetworkConfig.Prefabs.Contains(prefab.gameObject)))
                 error = "Register every reward prefab in NetworkPrefabs.";
             return error == null;
         }
         if (Difficulty == null || Waves == null || Waves.Count == 0) { error = "Configure difficulty and at least one wave."; return false; }
+        bool hasSpawnList = TryResolveSpawnList(false, customEnemySpawnList, out activeSpawnList, out activeSpawnEntries);
+        if (customEnemySpawnList != null && !hasSpawnList)
+        { error = "The custom enemy SpawnList has no valid Minion prefabs with positive weights."; return false; }
         foreach (var wave in Waves)
         {
-            if (wave == null || wave.Count < 1 || wave.PoolIndex < 0 || Pools == null || wave.PoolIndex >= Pools.Count)
+            if (wave == null || wave.Count < 1 ||
+                (activeSpawnList == null && (wave.PoolIndex < 0 || Pools == null || wave.PoolIndex >= Pools.Count)))
             { error = "A wave has an invalid count or pool index."; return false; }
+            if (activeSpawnList != null)
+                continue;
             var pool = Pools[wave.PoolIndex];
             if (pool == null || pool.Entries == null || !pool.Entries.Exists(entry => entry != null && entry.Prefab != null && entry.Weight > 0))
             { error = "A wave references an empty pool."; return false; }
@@ -215,7 +241,98 @@ public class DungeonSpawnManager : MonoBehaviour
                     !dungeon.NetworkManager.NetworkConfig.Prefabs.Contains(entry.Prefab.gameObject))
                 { error = "Register every minion prefab in NetworkPrefabs."; return false; }
         }
+        if (activeSpawnList != null)
+        {
+            if (activeSpawnEntries == null || activeSpawnEntries.Count == 0)
+            { error = "The selected enemy SpawnList has no valid Minion prefabs with positive weights."; return false; }
+            if (activeSpawnEntries.Exists(entry => entry.Prefab.GetComponent<NetworkObject>() == null ||
+                !dungeon.NetworkManager.NetworkConfig.Prefabs.Contains(entry.Prefab)))
+            { error = "Register every enemy prefab in NetworkPrefabs and include a NetworkObject."; return false; }
+        }
         return true;
+    }
+
+    private int GetPartyDifficulty()
+    {
+        int count = 0;
+        long levelTotal = 0;
+        if (dungeon != null && dungeon.NetworkManager != null)
+        {
+            foreach (var client in dungeon.NetworkManager.ConnectedClientsList)
+            {
+                var player = client.PlayerObject;
+                if (player == null || !player.IsSpawned || !player.TryGetComponent<PlayerStats>(out var stats))
+                    continue;
+                levelTotal += Mathf.Max(1, stats.Level);
+                count++;
+            }
+        }
+
+        if (count == 0)
+            return 1;
+
+        float averageLevel = (float)levelTotal / count;
+        return Mathf.Clamp(Mathf.FloorToInt(averageLevel + count), 1, 10);
+    }
+
+    private bool TryResolveSpawnList(
+        bool rewards,
+        SpawnListAsset customList,
+        out SpawnListAsset selectedList,
+        out List<SpawnListAsset.Entry> selectedEntries)
+    {
+        selectedList = null;
+        selectedEntries = null;
+
+        if (customList != null)
+        {
+            selectedList = customList;
+            selectedEntries = GetValidEntries(customList, rewards);
+            return selectedEntries.Count > 0;
+        }
+
+        int bestDistance = int.MaxValue;
+        List<SpawnListAsset> bestLists = new List<SpawnListAsset>();
+        foreach (SpawnListAsset candidate in dungeon.SpawnLists)
+        {
+            if (candidate == null || GetValidEntries(candidate, rewards).Count == 0)
+                continue;
+
+            int distance = Mathf.Abs(Mathf.Clamp(candidate.Difficulty, 1, 10) - encounterDifficulty);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestLists.Clear();
+            }
+            if (distance == bestDistance)
+                bestLists.Add(candidate);
+        }
+
+        if (bestLists.Count == 0)
+            return false;
+
+        selectedList = bestLists[UnityEngine.Random.Range(0, bestLists.Count)];
+        selectedEntries = GetValidEntries(selectedList, rewards);
+        return selectedEntries.Count > 0;
+    }
+
+    private static List<SpawnListAsset.Entry> GetValidEntries(SpawnListAsset list, bool rewards)
+    {
+        var result = new List<SpawnListAsset.Entry>();
+        if (list == null || list.Spawn == null)
+            return result;
+
+        foreach (var entry in list.Spawn)
+        {
+            if (entry == null || entry.Prefab == null || entry.Weight <= 0)
+                continue;
+
+            bool isMinion = entry.Prefab.GetComponent<Minion>() != null;
+            bool isNetworkPrefab = entry.Prefab.GetComponent<NetworkObject>() != null;
+            if (rewards ? (!isMinion && isNetworkPrefab) : isMinion)
+                result.Add(entry);
+        }
+        return result;
     }
     private IEnumerator RunEncounter()
     {
@@ -256,6 +373,23 @@ public class DungeonSpawnManager : MonoBehaviour
     }
     private Minion SelectPrefab(SpawnPool pool)
     {
+        if (activeSpawnEntries != null && activeSpawnEntries.Count > 0)
+        {
+            float totalWeight = 0;
+            foreach (var entry in activeSpawnEntries)
+                totalWeight += entry.Weight;
+            float globalChoice = UnityEngine.Random.value * totalWeight;
+            Minion globalFallback = null;
+            foreach (var entry in activeSpawnEntries)
+            {
+                var prefab = entry.Prefab.GetComponent<Minion>();
+                globalFallback = prefab;
+                globalChoice -= entry.Weight;
+                if (globalChoice <= 0) return prefab;
+            }
+            return globalFallback;
+        }
+
         float total = 0;
         foreach (var entry in pool.Entries) if (entry != null && entry.Prefab != null && entry.Weight > 0) total += entry.Weight;
         float choice = UnityEngine.Random.value * total;
@@ -274,7 +408,7 @@ public class DungeonSpawnManager : MonoBehaviour
         Minion unit = null;
         try
         {
-            var prefab = SelectPrefab(Pools[wave.PoolIndex]);
+            var prefab = SelectPrefab(activeSpawnList != null ? null : Pools[wave.PoolIndex]);
             Vector3 point = spawnPositions[UnityEngine.Random.Range(0, spawnPositions.Count)];
             var agent = prefab.GetComponent<NavMeshAgent>();
             var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
@@ -300,7 +434,12 @@ public class DungeonSpawnManager : MonoBehaviour
     }
     private void ApplyDifficulty(Minion unit, Wave wave, int waveIndex)
     {
-        float scale = Mathf.Max(0.01f, Difficulty.BaseMultiplier * wave.Difficulty *
+        int enemyLevel = dungeon.GetEnemySpawnLevel(room, encounterDifficulty);
+        unit.SetLevel(enemyLevel);
+        float spawnListScale = activeSpawnList != null
+            ? (float)enemyLevel / Mathf.Clamp(activeSpawnList.Difficulty, 1, 10)
+            : (float)enemyLevel / Mathf.Max(1, encounterDifficulty);
+        float scale = Mathf.Max(0.01f, Difficulty.BaseMultiplier * spawnListScale * wave.Difficulty *
             (1 + Difficulty.PerRoom * Mathf.Max(0, room.RoomIndex - 1) + Difficulty.PerWave * waveIndex));
         unit.SetMaxHealth(Mathf.Max(1, unit.GetStat(MinionStat.MaxHealth) * scale * Difficulty.Health));
         unit.SetHealth(unit.GetStat(MinionStat.MaxHealth));
@@ -317,7 +456,32 @@ public class DungeonSpawnManager : MonoBehaviour
         NetworkObject reward = null;
         try
         {
-            var prefab = RewardPrefabs[UnityEngine.Random.Range(0, RewardPrefabs.Count)];
+            NetworkObject prefab;
+            if (activeSpawnEntries != null && activeSpawnEntries.Count > 0)
+            {
+                float totalWeight = 0;
+                foreach (var entry in activeSpawnEntries)
+                    totalWeight += entry.Weight;
+                float choice = UnityEngine.Random.value * totalWeight;
+                SpawnListAsset.Entry fallback = null;
+                SpawnListAsset.Entry selected = null;
+                foreach (var entry in activeSpawnEntries)
+                {
+                    fallback = entry;
+                    choice -= entry.Weight;
+                    if (choice <= 0)
+                    {
+                        selected = entry;
+                        break;
+                    }
+                }
+                selected ??= fallback;
+                prefab = selected.Prefab.GetComponent<NetworkObject>();
+            }
+            else
+            {
+                prefab = RewardPrefabs[UnityEngine.Random.Range(0, RewardPrefabs.Count)];
+            }
             reward = Instantiate(prefab, spawnPositions[UnityEngine.Random.Range(0, spawnPositions.Count)], Quaternion.identity);
             reward.Spawn();
             if (!reward.IsSpawned) throw new InvalidOperationException("Reward was not spawned.");

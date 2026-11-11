@@ -21,21 +21,39 @@ generadas sí tienen NetworkObject y los cierres se derivan del estado replicado
    Se autodetectan el nombre spawners y los colliders trigger si no hay referencias.
    Para jerarquías ambiguas, asignar `RoomObject.SpawnManager` y las referencias de sala.
    Un único encuentro por RoomObject. Los triggers necesitan detectar la capa del jugador.
-3. En `Pools` definir prefabs Minion y pesos de selección. En `Waves`, una entrada por
-   oleada con PoolIndex (desde 0), cantidad, intervalo de spawn y espera inicial.
-   Los minions deben llevar su comportamiento enemigo/ataque y existir en NetworkPrefabs,
-   al igual que proyectiles, drops y RewardPrefabs. Hornear el NavMesh para sus tipos
-   de agente. Un marcador no válido para el agente aborta el encuentro y abre las puertas.
-4. Ajustar Difficulty. El factor global es:
-   `BaseMultiplier * Wave.Difficulty * (1 + PerRoom * (RoomIndex - 1) + PerWave * waveIndex)`.
+3. Para usar listas globales, crear assets con **Create > Dungeon > Spawn List** dentro
+   de `Assets/Resources/Spawners`. Cada asset tiene `Difficulty` (1-10) y entradas
+   `Spawn` con prefab y peso entero. Los prefabs con `Minion` forman listas de enemigos;
+   otros prefabs con `NetworkObject` forman listas de recompensas. `DungeonManager`
+   carga estos assets para el mapa cuando `Map Spawn Lists` está vacío. Para elegir
+   oleadas propias del mapa, agregar assets a `Map Spawn Lists`; esa selección reemplaza
+   la carga de Resources para ese mapa. Si hay varios assets a igual distancia del nivel
+   del grupo, cada asset tiene la misma probabilidad (dos assets = 50/50). Para una sala
+   especial, asignar un asset a `Custom Enemy Spawn List` o `Custom Reward Spawn List`;
+   el override solo afecta ese tipo de spawn. Si no hay asset compatible, se usan
+   `Pools` o `RewardPrefabs` locales como fallback. En `Waves`, configurar cantidad,
+   intervalo y espera; PoolIndex solo se usa con los pools locales. Todos los prefabs
+   generados deben estar en NetworkPrefabs. Hornear el NavMesh para los agentes; un
+   marcador no válido para el agente aborta el encuentro y abre las puertas.
+4. Configurar `RoomObject.SpawnDifficulty`. La dificultad base del grupo es
+   `floor(promedio de niveles + cantidad de jugadores)`, limitada a 1-10. Por ejemplo,
+   niveles 2, 4 y 5 producen `floor(3.66 + 3) = 6`. Una sala `Common` usa ese nivel;
+   `Easy` selecciona un nivel entre 1 y el nivel base; `Difficult` puede sumar 1 nivel
+   por enemigo con la probabilidad `DifficultRoomBonusLevelChance` de DungeonManager
+   (50% por defecto). El nivel aplicado se replica en `Minion.Level`. Para una SpawnList, la
+   escala relativa es nivel del enemigo / Difficulty del asset. En pools locales, se
+   compara con el nivel base del grupo. El factor final es:
+   `BaseMultiplier * escalaSpawnList * Wave.Difficulty * (1 + PerRoom * (RoomIndex - 1) + PerWave * waveIndex)`.
    Este factor se multiplica por el ajuste de cada propiedad. Los valores menores que
    1 debilitan; los mayores que 1 fortalecen. Se escalan vida/chakra máximos (se rellenan),
    velocidad, velocidad de ataque, armadura, resistencia mágica y daño del componente
    de ataque. No modifica los assets de prefabs ni las definiciones de habilidades.
-5. Configurar `RewardPrefabs`: se elige uno al entrar todos en una sala marcada de
-   recompensa. Son las salas 3, 6, 9… por defecto, excluyendo la sala principal 0.
-   La recompensa sustituye completamente a las oleadas. La sala se libera al generar
-   el premio; no espera a recogerlo. El flag IsRewardRoom lo asigna DungeonManager.
+5. Las salas marcadas de recompensa usan la lista global de recompensa o el override
+   `Custom Reward Spawn List`; si no existe una lista compatible se usa `RewardPrefabs`.
+   Se elige un prefab ponderado al entrar todos en la sala. Son las salas 3, 6, 9… por
+   defecto, excluyendo la sala principal 0. La recompensa sustituye las oleadas. La
+   sala se libera al generar el premio; no espera a recogerlo. DungeonManager asigna
+   `IsRewardRoom`.
 6. En DoorObject asignar `blockingColliders` (sólidos); si está vacío se usan los
    colliders no-trigger de sus hijos. Opcionalmente asignar Animator y parámetro Locked.
    No incluir colliders de paredes permanentes en ese conjunto. El estado físico y

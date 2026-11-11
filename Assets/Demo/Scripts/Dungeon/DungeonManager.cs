@@ -23,12 +23,22 @@ public class DungeonManager : NetworkBehaviour
     [UnityEngine.Serialization.FormerlySerializedAs("ClearingIndex")]
     [SerializeField, Min(0)] private int previewClearingIndex;
     [Min(1)] public int RewardRoomInterval = 3;
+    [Header("Spawn lists")]
+    [Tooltip("Optional spawn lists for this map. If empty, assets are loaded from Resources/Spawners.")]
+    [SerializeField] private List<SpawnListAsset> mapSpawnLists = new List<SpawnListAsset>();
+    [Range(0f, 1f)]
+    [Tooltip("Per-enemy chance for a difficult room to spawn one level above the party difficulty.")]
+    public float DifficultRoomBonusLevelChance = 0.5f;
     private readonly NetworkVariable<int> clearance = new NetworkVariable<int>(0);
     private readonly NetworkVariable<int> encounterRoom = new NetworkVariable<int>(-1);
     private readonly NetworkVariable<int> rewardInterval = new NetworkVariable<int>(3);
     private NetworkList<int> route = new NetworkList<int>();
     private readonly List<RoomObject> roomCatalog = new List<RoomObject>();
+    private readonly List<SpawnListAsset> resourceSpawnLists = new List<SpawnListAsset>();
     private bool presentationDirty;
+    private bool runInitializationPending;
+    public IReadOnlyList<SpawnListAsset> SpawnLists =>
+        mapSpawnLists != null && mapSpawnLists.Count > 0 ? mapSpawnLists : resourceSpawnLists;
     public int ClearingIndex => IsSpawned ? clearance.Value : previewClearingIndex;
     public int ActiveEncounterIndex => IsSpawned ? encounterRoom.Value : -1;
     public bool HasServerAuthority => IsSpawned && IsServer;
@@ -45,7 +55,7 @@ public class DungeonManager : NetworkBehaviour
         clearance.OnValueChanged += StateChanged;
         encounterRoom.OnValueChanged += StateChanged;
         rewardInterval.OnValueChanged += StateChanged;
-        if (IsServer) RebuildRoute();
+        if (IsServer) runInitializationPending = true;
         else ApplyReplicatedRoute();
     }
 
@@ -62,11 +72,37 @@ public class DungeonManager : NetworkBehaviour
 
     private void BuildCatalog()
     {
+        LoadResourceSpawnLists();
         roomCatalog.Clear();
         foreach (var room in FindObjectsByType<RoomObject>(FindObjectsInactive.Include))
             if (room.gameObject.scene == gameObject.scene) roomCatalog.Add(room);
         // Scene objects have the same hierarchy on all peers, unlike instance IDs.
         roomCatalog.Sort((a, b) => string.CompareOrdinal(SceneKey(a.transform), SceneKey(b.transform)));
+    }
+
+    private void LoadResourceSpawnLists()
+    {
+        resourceSpawnLists.Clear();
+        resourceSpawnLists.AddRange(Resources.LoadAll<SpawnListAsset>("Spawners"));
+    }
+
+    public int GetEnemySpawnLevel(RoomObject room, int partyDifficulty)
+    {
+        int baseLevel = Mathf.Clamp(partyDifficulty, 1, 10);
+        if (room == null)
+            return baseLevel;
+
+        switch (room.SpawnDifficulty)
+        {
+            case RoomSpawnDifficulty.Easy:
+                return Random.Range(1, baseLevel + 1);
+            case RoomSpawnDifficulty.Difficult:
+                if (baseLevel < 10 && Random.value < Mathf.Clamp01(DifficultRoomBonusLevelChance))
+                    return baseLevel + 1;
+                return baseLevel;
+            default:
+                return baseLevel;
+        }
     }
 
     private static string SceneKey(Transform item)
@@ -80,7 +116,28 @@ public class DungeonManager : NetworkBehaviour
     private void StateChanged(int previous, int current) => presentationDirty = true;
     private void LateUpdate()
     {
-        if (!IsSpawned || !presentationDirty) return;
+        if (!IsSpawned) return;
+
+        // Scene objects can receive OnNetworkSpawn before other scene components
+        // finish Start(). Build the host run on the first LateUpdate so their
+        // room/door references and runtime setup are ready.
+        if (IsServer && runInitializationPending)
+        {
+            runInitializationPending = false;
+            BuildCatalog();
+            if (roomCatalog.Count == 0)
+            {
+                Debug.LogError($"{name}: no RoomObject instances were found in scene '{gameObject.scene.name}'. The dungeon run was not generated.", this);
+                return;
+            }
+
+            RebuildRoute();
+            if (selectedRooms.Count == 0)
+                Debug.LogError($"{name}: route generation returned no rooms in scene '{gameObject.scene.name}'. Check the room catalog and connections.", this);
+            return;
+        }
+
+        if (!presentationDirty) return;
         presentationDirty = false;
         if (!IsServer) ApplyReplicatedRoute();
         else RefreshDoorStates();

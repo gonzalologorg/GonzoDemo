@@ -2,6 +2,13 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using System.Collections.Generic;
 
+public enum RoomSpawnDifficulty
+{
+    Easy,
+    Common,
+    Difficult
+}
+
 public class RoomObject : MonoBehaviour
 {
     public List<DoorObject> Doors = new List<DoorObject>();
@@ -9,6 +16,9 @@ public class RoomObject : MonoBehaviour
     [FormerlySerializedAs("ClearingIndex")]
     [Tooltip("Position of this room in the DungeonManager route. -1 means it is not selected.")]
     public int RoomIndex = -1;
+
+    [Tooltip("Controls the enemy level range used in this room.")]
+    public RoomSpawnDifficulty SpawnDifficulty = RoomSpawnDifficulty.Common;
 
     [Tooltip("Encounter controller for this room. Can be on a sibling under the room container.")]
     public DungeonSpawnManager SpawnManager;

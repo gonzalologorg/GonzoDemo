@@ -67,6 +67,54 @@ public class DungeonEncounterTests
     }
 
     [Test]
+    public void UniversalListsRemainEligibleAlongsideNearestDifficultyAtEveryLevel()
+    {
+        var universal = ScriptableObject.CreateInstance<SpawnListAsset>();
+        var normal = ScriptableObject.CreateInstance<SpawnListAsset>();
+        var reward = new GameObject("Test reward");
+        reward.AddComponent<Unity.Netcode.NetworkObject>();
+        var randomState = Random.state;
+        try
+        {
+            universal.Difficulty = 0;
+            normal.Difficulty = 5;
+            universal.Spawn.Add(new SpawnListAsset.Entry { Prefab = reward });
+            normal.Spawn.Add(new SpawnListAsset.Entry { Prefab = reward });
+            var serialized = new SerializedObject(manager);
+            var lists = serialized.FindProperty("mapSpawnLists");
+            lists.arraySize = 2;
+            lists.GetArrayElementAtIndex(0).objectReferenceValue = universal;
+            lists.GetArrayElementAtIndex(1).objectReferenceValue = normal;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            var spawner = rooms[0].SpawnManager;
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            var resolve = typeof(DungeonSpawnManager).GetMethod("TryResolveSpawnList", flags);
+            var difficulty = typeof(DungeonSpawnManager).GetField("encounterDifficulty", flags);
+            Random.InitState(1234);
+            for (int level = 1; level <= 10; level++)
+            {
+                difficulty.SetValue(spawner, level);
+                var selected = new HashSet<SpawnListAsset>();
+                for (int attempt = 0; attempt < 64; attempt++)
+                {
+                    object[] args = { true, null, null, null };
+                    Assert.That(resolve.Invoke(spawner, args), Is.EqualTo(true));
+                    selected.Add((SpawnListAsset)args[2]);
+                }
+                Assert.That(selected, Does.Contain(universal), "Level " + level);
+                Assert.That(selected, Does.Contain(normal), "Level " + level);
+            }
+        }
+        finally
+        {
+            Random.state = randomState;
+            Object.DestroyImmediate(universal);
+            Object.DestroyImmediate(normal);
+            Object.DestroyImmediate(reward);
+        }
+    }
+
+    [Test]
     public void BothSidesOfNextRoomOpenButFutureRoomsStayBlocked()
     {
         Assert.That(outward[0].IsLocked, Is.False);

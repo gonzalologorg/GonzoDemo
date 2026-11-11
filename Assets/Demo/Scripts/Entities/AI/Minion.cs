@@ -22,11 +22,15 @@ namespace GonzoDemo.AI
         [SerializeField, Min(1)] private float initialHealth = 100;
         [SerializeField, Min(0)] private float initialChakra = 100;
         [SerializeField, Min(0)] private float initialSpeed = 3.5f;
+
         [SerializeField, Min(0)] private float initialAttackSpeed = 1;
         [SerializeField, Min(0)] private float initialArmor;
         [SerializeField, Min(0)] private float initialMagicResistance;
         [SerializeField, Min(0)] private float deathDelay = 1;
         [SerializeField, Min(0)] private float positioningRadius = 2;
+        [SerializeField] public bool spawnXPOrb = true;
+        [SerializeField, Min(0)] public int xpOrbAmount = 10;
+        [SerializeField] private ExperienceBall xpOrbPrefab;
         [SerializeField] private UnityEvent onDeath = new UnityEvent();
         private NetworkList<float> stats = new NetworkList<float>();
         private readonly NetworkVariable<int> level = new NetworkVariable<int>(1);
@@ -195,8 +199,30 @@ namespace GonzoDemo.AI
             dead.Value = true;
             StopMoving();
             enemy.Value = NoTarget;
+            DropExperienceOrb();
             Died?.Invoke(this);
             StartCoroutine(DespawnAfterDeath());
+        }
+        private void DropExperienceOrb()
+        {
+            if (!spawnXPOrb || xpOrbAmount <= 0) return;
+            var prefab = xpOrbPrefab;
+            // Existing scene minions can use the registered XP orb without manual reassignment.
+            if (prefab == null)
+                foreach (var entry in NetworkManager.NetworkConfig.Prefabs.Prefabs)
+                    if (entry.Prefab != null && entry.Prefab.TryGetComponent<ExperienceBall>(out var candidate))
+                    {
+                        prefab = candidate;
+                        break;
+                    }
+            if (prefab == null || !NetworkManager.NetworkConfig.Prefabs.Contains(prefab.gameObject))
+            {
+                Debug.LogError($"{name}: configure and register an ExperienceBall prefab to drop XP.", this);
+                return;
+            }
+            var orb = Instantiate(prefab, transform.position + Vector3.up * 0.5f, Quaternion.identity);
+            orb.Amount = xpOrbAmount;
+            orb.NetworkObject.Spawn();
         }
         private void DeathChanged(bool previous, bool current) { if (current) onDeath.Invoke(); }
         private IEnumerator DespawnAfterDeath()

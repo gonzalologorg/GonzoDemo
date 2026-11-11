@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb68efe62d0e8fa4cb31a54b415b5037, type: 3}
+  m_Name: fists
+  m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.CombatEquipment
+  Damage: 10
+  Type: 0
+  Animations:
+  - {fileID: 5327579647636344352, guid: d193a764e528253418a9c8161269688c, type: 3}
+  - {fileID: 190365492218098281, guid: b4ed12fcea5716a4b88a664cf716cfc6, type: 3}
+  AttackRange: 1.5
+  Radius: 0
+  AttackCooldown: 0.5
+  ProjectilePrefab: {fileID: 0}
+  ProjectileSpeed: 15

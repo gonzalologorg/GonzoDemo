@@ -29,6 +29,7 @@ namespace GonzoDemo.AI
         [SerializeField, Min(0)] private float positioningRadius = 2;
         [SerializeField] private UnityEvent onDeath = new UnityEvent();
         private NetworkList<float> stats = new NetworkList<float>();
+        private readonly NetworkVariable<int> level = new NetworkVariable<int>(1);
         private static NetworkObjectReference NoTarget => new NetworkObjectReference((NetworkObject)null);
         private readonly NetworkVariable<NetworkObjectReference> enemy = new NetworkVariable<NetworkObjectReference>(NoTarget);
         private readonly NetworkVariable<NetworkObjectReference> owner = new NetworkVariable<NetworkObjectReference>(NoTarget);
@@ -37,6 +38,7 @@ namespace GonzoDemo.AI
         public GameObject Enemy => Resolve(enemy.Value);
         public GameObject Owner => Resolve(owner.Value);
         public bool IsDead => dead.Value;
+        public int Level => level.Value;
         public bool CanAct => IsSpawned && IsServer && !IsDead;
         public event Action<MinionStat, float> StatChanged;
         public event Action<Minion> Died;
@@ -103,6 +105,11 @@ namespace GonzoDemo.AI
         public void SetAttackSpeed(float value) => SetStat(MinionStat.AttackSpeed, value);
         public void SetArmor(float value) => SetStat(MinionStat.Armor, value);
         public void SetMagicResistance(float value) => SetStat(MinionStat.MagicResistance, value);
+        public void SetLevel(int value)
+        {
+            if (CanAct)
+                level.Value = Mathf.Clamp(value, 1, 10);
+        }
         public static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
         private void StatsChanged(NetworkListEvent<float> change)

@@ -92,6 +92,7 @@ public class DungeonSpawnManager : MonoBehaviour
     private SpawnListAsset activeSpawnList;
     private List<SpawnListAsset.Entry> activeSpawnEntries;
     private int encounterDifficulty = 1;
+    private int encounterPlayerLevel = 1;
     private Coroutine encounter;
     private bool completed;
     private float retryAt;
@@ -198,6 +199,7 @@ public class DungeonSpawnManager : MonoBehaviour
         activeSpawnList = null;
         activeSpawnEntries = null;
         encounterDifficulty = GetPartyDifficulty();
+        encounterPlayerLevel = GetPartyDifficulty(false);
         spawnPositions.Clear();
         if (spawners == null || spawners.childCount == 0) { error = "Configure children under spawners."; return false; }
         foreach (Transform marker in spawners)
@@ -252,7 +254,7 @@ public class DungeonSpawnManager : MonoBehaviour
         return true;
     }
 
-    private int GetPartyDifficulty()
+    private int GetPartyDifficulty(bool includePartySize = true)
     {
         int count = 0;
         long levelTotal = 0;
@@ -272,7 +274,7 @@ public class DungeonSpawnManager : MonoBehaviour
             return 1;
 
         float averageLevel = (float)levelTotal / count;
-        return Mathf.Clamp(Mathf.FloorToInt(averageLevel + count), 1, 10);
+        return Mathf.Clamp(Mathf.FloorToInt(averageLevel + (includePartySize ? count : 0)), 1, 10);
     }
 
     private bool TryResolveSpawnList(
@@ -293,10 +295,17 @@ public class DungeonSpawnManager : MonoBehaviour
 
         int bestDistance = int.MaxValue;
         List<SpawnListAsset> bestLists = new List<SpawnListAsset>();
+        List<SpawnListAsset> universalLists = new List<SpawnListAsset>();
         foreach (SpawnListAsset candidate in dungeon.SpawnLists)
         {
             if (candidate == null || GetValidEntries(candidate, rewards).Count == 0)
                 continue;
+
+            if (candidate.Difficulty == 0)
+            {
+                universalLists.Add(candidate);
+                continue;
+            }
 
             int distance = Mathf.Abs(Mathf.Clamp(candidate.Difficulty, 1, 10) - encounterDifficulty);
             if (distance < bestDistance)
@@ -308,6 +317,8 @@ public class DungeonSpawnManager : MonoBehaviour
                 bestLists.Add(candidate);
         }
 
+        // Universal lists never displace the normal nearest-level candidates.
+        bestLists.AddRange(universalLists);
         if (bestLists.Count == 0)
             return false;
 
@@ -434,8 +445,10 @@ public class DungeonSpawnManager : MonoBehaviour
     }
     private void ApplyDifficulty(Minion unit, Wave wave, int waveIndex)
     {
-        int enemyLevel = dungeon.GetEnemySpawnLevel(room, encounterDifficulty);
+        bool adaptiveList = activeSpawnList != null && activeSpawnList.Difficulty == 0;
+        int enemyLevel = adaptiveList ? encounterPlayerLevel : dungeon.GetEnemySpawnLevel(room, encounterDifficulty);
         unit.SetLevel(enemyLevel);
+        // Universal list prefabs use level-one stats and scale to the player level.
         float spawnListScale = activeSpawnList != null
             ? (float)enemyLevel / Mathf.Clamp(activeSpawnList.Difficulty, 1, 10)
             : (float)enemyLevel / Mathf.Max(1, encounterDifficulty);
@@ -483,6 +496,8 @@ public class DungeonSpawnManager : MonoBehaviour
                 prefab = RewardPrefabs[UnityEngine.Random.Range(0, RewardPrefabs.Count)];
             }
             reward = Instantiate(prefab, spawnPositions[UnityEngine.Random.Range(0, spawnPositions.Count)], Quaternion.identity);
+            if (activeSpawnList != null && activeSpawnList.Difficulty == 0 && reward.TryGetComponent<AbilityBall>(out var ability))
+                ability.Level = encounterPlayerLevel;
             reward.Spawn();
             if (!reward.IsSpawned) throw new InvalidOperationException("Reward was not spawned.");
             return true;

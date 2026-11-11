@@ -48,8 +48,22 @@ public class DungeonManager : NetworkBehaviour
     private static readonly Color UpcomingDoorColor = Color.green;
     private static readonly Color ClearedDoorColor = Color.yellow;
 
+    private void Awake()
+    {
+        BeginPlayerSpawnSetup();
+    }
+
+    private void BeginPlayerSpawnSetup()
+    {
+        foreach (var manager in FindObjectsByType<GonzoDemo.GameManager>(FindObjectsInactive.Include))
+            manager.BeginSpawnPointSetup();
+        foreach (var manager in FindObjectsByType<Blocks.Gameplay.Core.GameManager>(FindObjectsInactive.Include))
+            manager.BeginSpawnPointSetup();
+    }
+
     public override void OnNetworkSpawn()
     {
+        BeginPlayerSpawnSetup();
         BuildCatalog();
         route.OnListChanged += RouteChanged;
         clearance.OnValueChanged += StateChanged;
@@ -61,6 +75,7 @@ public class DungeonManager : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
+        BeginPlayerSpawnSetup();
         route.OnListChanged -= RouteChanged;
         clearance.OnValueChanged -= StateChanged;
         encounterRoom.OnValueChanged -= StateChanged;

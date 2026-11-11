@@ -86335,6 +86335,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: edb1742da4e0d494fb0d7c95684d1acb, type: 2}
   - {fileID: 11400000, guid: 5331a641bcfc6284286493a6ad652ae8, type: 2}
   - {fileID: 11400000, guid: 8f79fec749e58114f8a54ce38506f5b3, type: 2}
+  - {fileID: 11400000, guid: 2cc724d55d01d9c479393f992bcc4dbf, type: 2}
+  - {fileID: 11400000, guid: 0aa7199b6f399074c97d52865ba0e5a6, type: 2}
   DifficultRoomBonusLevelChance: 0.5
 --- !u!4 &1927625035
 Transform:

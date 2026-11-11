@@ -12,7 +12,8 @@ public class SpawnListAsset : ScriptableObject
         [Min(0)] public int Weight = 1;
     }
 
-    [Range(1, 10)]
+    [Tooltip("0: eligible at every level and adapts to the current player level (party average in multiplayer). 1–10: fixed list difficulty.")]
+    [Range(0, 10)]
     public int Difficulty = 1;
 
     public List<Entry> Spawn = new List<Entry>();

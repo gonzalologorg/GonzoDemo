@@ -46,6 +46,27 @@ namespace Blocks.Gameplay.Core
         [Header("Spawning")]
         [Tooltip("List of Transforms to use as spawn points.")]
         [SerializeField] private List<Transform> spawnPoints;
+        private bool spawnPointsPending;
+
+        public void BeginSpawnPointSetup() => spawnPointsPending = true;
+
+        private IEnumerator PositionInitialPlayer(CoreMovement movement)
+        {
+            // The dungeon publishes its selected room after connection callbacks.
+            while (spawnPointsPending)
+            {
+                if (movement == null || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+                    yield break;
+                yield return null;
+            }
+            if (movement == null || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) yield break;
+            ulong clientId = NetworkManager.Singleton.LocalClientId;
+            int index = GetSpawnIndex(clientId);
+            if (index >= 0 && spawnPoints[index] != null)
+                movement.transform.rotation = spawnPoints[index].rotation;
+            movement.SetPosition(GetSpawnPosition(clientId));
+            movement.ResetMovementForces();
+        }
 
         /// <summary>Replaces the spawn locations used for initial spawning and respawning.</summary>
         public void SetSpawnPoints(IEnumerable<Transform> points)
@@ -55,6 +76,7 @@ namespace Blocks.Gameplay.Core
                 foreach (var point in points)
                     if (point != null) replacement.Add(point);
             spawnPoints = replacement;
+            spawnPointsPending = replacement.Count == 0;
         }
 
         [Header("Events")]
@@ -228,15 +250,7 @@ namespace Blocks.Gameplay.Core
                 // Set spawn position and rotation based on client ID
                 if (localPlayer.TryGetComponent<CoreMovement>(out var movement))
                 {
-                    Vector3 spawnPos = GetSpawnPosition(NetworkManager.Singleton.LocalClientId);
-                    int index = GetSpawnIndex(NetworkManager.Singleton.LocalClientId);
-                    if (index >= 0 && spawnPoints != null && spawnPoints.Count > index)
-                    {
-                        movement.transform.rotation = spawnPoints[index].rotation;
-                    }
-
-                    movement.SetPosition(spawnPos);
-                    movement.ResetMovementForces();
+                    StartCoroutine(PositionInitialPlayer(movement));
                 }
                 else
                 {
@@ -305,15 +319,7 @@ namespace Blocks.Gameplay.Core
             // Set spawn position and rotation based on client ID
             if (localPlayer.TryGetComponent<CoreMovement>(out var movement))
             {
-                Vector3 spawnPos = GetSpawnPosition(NetworkManager.Singleton.LocalClientId);
-                int index = GetSpawnIndex(NetworkManager.Singleton.LocalClientId);
-                if (index >= 0 && spawnPoints != null && spawnPoints.Count > index)
-                {
-                    movement.transform.rotation = spawnPoints[index].rotation;
-                }
-
-                movement.SetPosition(spawnPos);
-                movement.ResetMovementForces();
+                StartCoroutine(PositionInitialPlayer(movement));
             }
             else
             {

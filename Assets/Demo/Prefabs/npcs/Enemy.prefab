@@ -172,7 +172,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 32, y: 0}
-  m_SizeDelta: {x: 168, y: 16}
+  m_SizeDelta: {x: 168, y: 10}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &1698140720324142641
 CanvasRenderer:
@@ -389,7 +389,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 32, y: 0}
-  m_SizeDelta: {x: 168, y: 16}
+  m_SizeDelta: {x: 168, y: 10}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &9025602684326873212
 CanvasRenderer:
@@ -457,7 +457,7 @@ RectTransform:
   m_GameObject: {fileID: 7043243746920237489}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.01, y: 0.01, z: 0.01}
+  m_LocalScale: {x: 0.005, y: 0.005, z: 0.005}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4062053443686899162}
@@ -588,7 +588,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 3.5
+  m_Speed: 3
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
@@ -612,7 +612,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1839407874
+  GlobalObjectIdHash: 2018172577
   InScenePlacedSourceGlobalObjectIdHash: 0
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -643,7 +643,7 @@ MonoBehaviour:
   initialHealth: 100
   initialChakra: 100
   initialSpeed: 3.5
-  initialAttackSpeed: 1
+  initialAttackSpeed: 0.5
   initialArmor: 0
   initialMagicResistance: 0
   deathDelay: 1
@@ -790,8 +790,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.AI.MinionMeleeAttack
   ShowTopMostFoldoutHeaderGroup: 1
   Range: 2
-  Damage: 10
-  Windup: 0.5
+  Damage: 3
+  Windup: 1.5
   GroupRecovery: 0.75
   OnWindup:
     m_PersistentCalls:
@@ -827,3 +827,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f937d8e85f1e9914c8fd18a02a7eab2c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  fullHealthWidth: 168

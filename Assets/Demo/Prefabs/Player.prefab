@@ -55,7 +55,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.6834123, g: 0.90943396, b: 0.13555704, a: 1}
@@ -186,6 +186,7 @@ GameObject:
   - component: {fileID: 8985596037712640235}
   - component: {fileID: 6492838721271482510}
   - component: {fileID: 2822845857665487227}
+  - component: {fileID: 6455047820062149447}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -646,6 +647,28 @@ MonoBehaviour:
   - slot: 3
     definition: {fileID: 11400000, guid: 3f5d3e5b34464a6fa23daf80642c6143, type: 2}
     level: 1
+--- !u!114 &6455047820062149447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4416926081852918481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb5ee08a07c4b2d4699c14f08dd930a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GonzoDemo.PlayerCombat
+  ShowTopMostFoldoutHeaderGroup: 1
+  loadout:
+  - {fileID: 11400000, guid: 55d8d0f252728bf46acd10baea427846, type: 2}
+  initialEquipmentIndex: 0
+  animator: {fileID: 0}
+  attackOrigin: {fileID: 0}
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  singleTargetTraceRadius: 0.2
 --- !u!1 &5666575444993934560
 GameObject:
   m_ObjectHideFlags: 0
@@ -1103,7 +1126,21 @@ MonoBehaviour:
   NetworkAnimatorExpanded: 0
   AuthorityMode: 1
   m_Animator: {fileID: 6827659484583295978}
-  TransitionStateInfoList: []
+  TransitionStateInfoList:
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -446757617
+    DestinationState: 2001808294
+    TransitionDuration: 0.25
+    TriggerNameHash: 1151706844
+    TransitionIndex: 2
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -446757617
+    DestinationState: -937710481
+    TransitionDuration: 0.25
+    TriggerNameHash: 1151706844
+    TransitionIndex: 3
   AnimatorParameterEntries:
     ParameterEntries:
     - name: Speed
@@ -1126,6 +1163,18 @@ MonoBehaviour:
       NameHash: 125937960
       Synchronize: 1
       ParameterType: 4
+    - name: IsCombat
+      NameHash: -1253078252
+      Synchronize: 1
+      ParameterType: 4
+    - name: DoAttack
+      NameHash: 1151706844
+      Synchronize: 1
+      ParameterType: 9
+    - name: DoAbility
+      NameHash: 195230828
+      Synchronize: 1
+      ParameterType: 9
   AnimatorParametersExpanded: 0
   coreMovement: {fileID: 7875331226141230548}
 --- !u!82 &7823981702144010973
